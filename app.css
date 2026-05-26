@@ -197,13 +197,12 @@ input[type="date"], input[type="time"] { color-scheme: dark; }
   box-shadow: 0 2px 8px rgba(0,0,0,.4);
 }
 
-/* Today view workout circles */
+/* Today view — full day schedule container */
 .today-workouts {
   padding: 0 16px 16px;
 }
 .today-workout-grid {
-  display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
-  padding: 16px;
+  display: block;
 }
 .workout-tap-card {
   display: flex; flex-direction: column; align-items: center; gap: 10px;
@@ -488,30 +487,24 @@ input[type="date"], input[type="time"] { color-scheme: dark; }
 }
 
 /* Weekly Snapshot */
-.snapshot-row {
-  display: flex; gap: 10px;
-  margin: 0 16px 16px;
+.snapshot-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 8px; padding: 0 16px 16px;
 }
-.snapshot-card {
-  flex: 1;
+.snap-stat {
   background: var(--surface-2);
-  border-radius: var(--radius-lg);
-  padding: 16px;
+  border-radius: var(--radius);
+  padding: 12px 8px;
   text-align: center;
 }
-.snapshot-pct {
-  font-size: 32px; font-weight: 800;
-  background: linear-gradient(135deg, var(--cf), var(--gold));
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  background-clip: text;
-  line-height: 1;
+.snap-icon { font-size: 20px; margin-bottom: 4px; }
+.snap-val {
+  font-size: 26px; font-weight: 800; line-height: 1;
 }
-.snapshot-pct.yoga-pct {
-  background: linear-gradient(135deg, var(--yoga), #c084fc);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-.snapshot-lbl { font-size: 11px; color: var(--text-3); font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-top: 6px; }
+.snap-lbl { font-size: 10px; color: var(--text-3); font-weight: 700; text-transform: uppercase; letter-spacing: .05em; margin-top: 4px; }
+.cf-color    { color: var(--cf); }
+.yoga-color  { color: var(--yoga); }
+.other-color { color: var(--other); }
 
 /* ══════════════════════════════
    READING TAB
@@ -558,7 +551,13 @@ input[type="date"], input[type="time"] { color-scheme: dark; }
 .book-info { flex: 1; }
 .book-title-row { display: flex; align-items: center; gap: 6px; }
 .book-title { font-size: 16px; font-weight: 700; }
-.book-complete-badge { font-size: 18px; }
+.book-complete-badge {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--green); display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 800; color: white; flex-shrink: 0;
+}
+.book-author { font-size: 12px; color: var(--text-3); margin-top: 3px; }
+.book-weeks  { color: var(--gold); font-weight: 700; }
 .book-dates { font-size: 12px; color: var(--text-3); margin-top: 4px; }
 .book-status {
   font-size: 11px; font-weight: 700;
@@ -913,6 +912,66 @@ input[type="date"], input[type="time"] { color-scheme: dark; }
 .sched-rest {
   padding: 20px 16px;
   color: var(--text-2); font-size: 14px; text-align: center;
+}
+
+/* ── Full Day Schedule (Challenge tab today view) ── */
+.day-header-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px 8px;
+}
+.day-name-display { font-size: 22px; font-weight: 800; font-style: italic; }
+.day-date-display { font-size: 13px; color: var(--text-3); margin-top: 2px; }
+.day-tag {
+  border: 1.5px solid var(--cf); color: var(--cf);
+  font-size: 10px; font-weight: 800; letter-spacing: .1em;
+  padding: 5px 10px; border-radius: 4px; text-transform: uppercase;
+  flex-shrink: 0;
+}
+.day-sched-wrap { padding-bottom: 8px; }
+.day-sched-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 11px 16px;
+  border-bottom: 1px solid rgba(255,255,255,.04);
+  cursor: pointer;
+  transition: opacity .3s, background .15s;
+}
+.day-sched-item:last-child { border-bottom: none; }
+.day-sched-item:active { background: rgba(255,255,255,.03); }
+.day-sched-item.done-item { opacity: .38; }
+.day-item-time {
+  font-size: 10px; color: var(--text-3); min-width: 52px;
+  text-align: right; flex-shrink: 0; padding-top: 3px; font-weight: 600;
+}
+.day-item-dot {
+  width: 9px; height: 9px; border-radius: 50%;
+  background: rgba(255,255,255,.2); flex-shrink: 0; margin-top: 4px;
+}
+.day-item-dot.cf    { background: var(--cf); }
+.day-item-dot.yoga  { background: var(--yoga); }
+.day-item-dot.other { background: var(--other); }
+.day-item-content { flex: 1; }
+.day-item-label { font-size: 15px; font-weight: 700; line-height: 1.2; }
+.day-item-label.done-strike { text-decoration: line-through; }
+.day-item-notes { font-size: 12px; color: var(--text-3); margin-top: 3px; line-height: 1.4; }
+.day-item-cf-notes { font-size: 12px; color: var(--cf); margin-top: 3px; font-style: italic; }
+.day-item-check {
+  width: 20px; height: 20px; flex-shrink: 0; border-radius: 50%;
+  border: 1.5px solid rgba(255,255,255,.15);
+  margin-top: 2px;
+  transition: .2s;
+}
+.day-item-check.cf    { border-color: var(--cf); }
+.day-item-check.yoga  { border-color: var(--yoga); }
+.day-item-check.other { border-color: var(--other); }
+.day-item-check.checked.cf    { background: var(--cf);    border-color: var(--cf); }
+.day-item-check.checked.yoga  { background: var(--yoga);  border-color: var(--yoga); }
+.day-item-check.checked.other { background: var(--other); border-color: var(--other); }
+.day-item-check.checked::after { content: '✓'; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; color: white; height: 100%; }
+
+/* CF modal skip button */
+.skip-notes-btn {
+  width: 100%; padding: 10px; text-align: center;
+  color: var(--text-3); font-size: 13px; margin-top: 8px;
 }
 
 /* Week view — tapped day schedule */

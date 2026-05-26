@@ -97,11 +97,6 @@
       </div>
 
       <!-- This Week Breakdown -->
-      <div class="section-label" style="margin-top:8px">THIS WEEK'S BREAKDOWN</div>
-      <div class="breakdown-row" id="breakdown-row">
-        <!-- populated by JS -->
-      </div>
-
     </section>
 
     <!-- ── TRACKER TAB ── -->
@@ -154,15 +149,8 @@
       <!-- Weekly Snapshot -->
       <div class="section-block">
         <div class="section-block-title">THIS WEEK'S SNAPSHOT</div>
-        <div class="snapshot-row">
-          <div class="snapshot-card">
-            <div class="snapshot-pct" id="snap-workout-pct">—%</div>
-            <div class="snapshot-lbl">Workout<br>Completion</div>
-          </div>
-          <div class="snapshot-card">
-            <div class="snapshot-pct yoga-pct" id="snap-sleep-pct">—%</div>
-            <div class="snapshot-lbl">Sleep<br>Consistency</div>
-          </div>
+        <div id="weekly-snapshot-container">
+          <!-- populated by JS -->
         </div>
       </div>
 
@@ -326,6 +314,21 @@
     </div>
   </div>
   <div style="flex:1" id="settings-close-area"></div>
+</div>
+
+<!-- ═══ CF NOTES MODAL ═══ -->
+<div class="modal-overlay" id="cf-modal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">CrossFit &#x1F3CB;&#xFE0F;</div>
+    <div class="modal-subtitle" id="cf-modal-sub"></div>
+    <div class="form-group">
+      <label class="form-label">WOD Notes — what did you do? How did it feel?</label>
+      <textarea class="form-input" id="cf-notes-input" placeholder="e.g. 21-15-9 thrusters + pull-ups, 8:42 — felt strong!" rows="4" style="min-height:100px;resize:none"></textarea>
+    </div>
+    <button class="modal-confirm-btn" id="cf-notes-save">Log CrossFit &#x2713;</button>
+    <button class="skip-notes-btn" id="cf-notes-skip">Skip notes &amp; log</button>
+  </div>
 </div>
 
 <script src="app.js"></script>

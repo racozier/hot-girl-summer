@@ -85,14 +85,16 @@ const QUOTES = [
 // ════════════════════════════════════════
 
 const KEY = {
-  START:      'hgs_start',
-  WORKOUTS:   'hgs_workouts',
-  SLEEP:      'hgs_sleep',
-  BOOKS:      'hgs_books',
-  REFLECTIONS:'hgs_reflect',
-  ONBOARDED:  'hgs_onboarded',
-  NOTIF:      'hgs_notif',
-  NOTIF_DATE: 'hgs_notif_date'
+  START:        'hgs_start',
+  WORKOUTS:     'hgs_workouts',
+  SLEEP:        'hgs_sleep',
+  BOOKS:        'hgs_books',
+  BOOKS_VER:    'hgs_books_ver',
+  REFLECTIONS:  'hgs_reflect',
+  ONBOARDED:    'hgs_onboarded',
+  NOTIF:        'hgs_notif',
+  NOTIF_DATE:   'hgs_notif_date',
+  DAILY_CHECKS: 'hgs_daily_checks'
 };
 
 function load(key, fallback) {
@@ -104,6 +106,88 @@ function save(key, val) {
 }
 
 // ════════════════════════════════════════
+// DEFAULT BOOKS & DAY SCHEDULES
+// ════════════════════════════════════════
+
+const BOOKS_VERSION = 2;
+const DEFAULT_BOOKS = [
+  { title: 'The High 5 Habit',           author: 'Mel Robbins',            weeks: 'Wks 1–2',   startDate: null, finishDate: null, completed: false, notes: [] },
+  { title: 'The Alter Ego Effect',       author: 'Todd Herman',            weeks: 'Wks 3–4',   startDate: null, finishDate: null, completed: false, notes: [] },
+  { title: 'Burnout',                    author: 'Emily & Amelia Nagoski', weeks: 'Wks 5–6',   startDate: null, finishDate: null, completed: false, notes: [] },
+  { title: 'The Body Is Not an Apology', author: 'Sonya Renee Taylor',     weeks: 'Wks 7–8',   startDate: null, finishDate: null, completed: false, notes: [] },
+  { title: 'Playing Big',                author: 'Tara Mohr',              weeks: 'Wks 9–10',  startDate: null, finishDate: null, completed: false, notes: [] },
+  { title: 'Big Magic',                  author: 'Elizabeth Gilbert',      weeks: 'Wks 11–12', startDate: null, finishDate: null, completed: false, notes: [] },
+];
+
+const DAY_SCHEDULES = {
+  1: [ // Monday — CF + Yoga (DOUBLE DAY)
+    { id: 'wake',    time: '5:30 AM', label: 'Wake up',        notes: 'Hydrate immediately. Electrolytes if keto phase.', type: 'routine' },
+    { id: 'cf',      time: '6:00 AM', label: 'CrossFit',       notes: 'Strength/WOD class. This is your anchor — go hard.', type: 'workout', cat: 'cf', wid: 'cf' },
+    { id: 'shower',  time: '7:00 AM', label: 'Home + Shower',  notes: 'Quick reset. High protein breakfast.', type: 'routine' },
+    { id: 'work',    time: '7:30 AM', label: 'Commute + Work', notes: '8:30–4:30 work day.', type: 'routine' },
+    { id: 'yoga',    time: '5:30 PM', label: 'Hot Yoga',       notes: 'Evening class. Recovery — let your body decompress.', type: 'workout', cat: 'yoga', wid: 'yoga' },
+    { id: 'dinner',  time: '7:00 PM', label: 'Dinner',         notes: 'Keto or plant-based depending on phase. Prep ahead.', type: 'routine' },
+    { id: 'reading', time: '8:30 PM', label: 'Reading',        notes: '30 min. Physical book only.', type: 'routine' },
+    { id: 'lights',  time: '9:00 PM', label: 'Lights out',     notes: '5:30 AM wake = 8.5 hrs.', type: 'routine' },
+  ],
+  2: [ // Tuesday — Yoga AM + Dance
+    { id: 'wake',    time: '5:30 AM', label: 'Wake up',        notes: 'Hydrate immediately.', type: 'routine' },
+    { id: 'yoga_am', time: '6:00 AM', label: 'Yoga AM',        notes: 'Morning practice. Breathe deep, set your intention.', type: 'workout', cat: 'yoga', wid: 'yoga_am' },
+    { id: 'shower',  time: '7:00 AM', label: 'Home + Shower',  notes: 'Quick reset. High protein breakfast.', type: 'routine' },
+    { id: 'work',    time: '7:30 AM', label: 'Commute + Work', notes: '8:30–4:30 work day.', type: 'routine' },
+    { id: 'dance',   time: '5:30 PM', label: 'Dance',          notes: 'Have fun. This is joy as movement — energy up.', type: 'workout', cat: 'other', wid: 'dance' },
+    { id: 'dinner',  time: '7:00 PM', label: 'Dinner',         notes: 'Keto or plant-based depending on phase.', type: 'routine' },
+    { id: 'reading', time: '8:30 PM', label: 'Reading',        notes: '30 min. Physical book only.', type: 'routine' },
+    { id: 'lights',  time: '9:00 PM', label: 'Lights out',     notes: '5:30 AM wake = 8.5 hrs.', type: 'routine' },
+  ],
+  3: [ // Wednesday — CF + Yoga (DOUBLE DAY)
+    { id: 'wake',    time: '5:30 AM', label: 'Wake up',        notes: 'Hydrate immediately. Electrolytes if keto phase.', type: 'routine' },
+    { id: 'cf',      time: '6:00 AM', label: 'CrossFit',       notes: 'Strength/WOD class. Push harder than last week.', type: 'workout', cat: 'cf', wid: 'cf' },
+    { id: 'shower',  time: '7:00 AM', label: 'Home + Shower',  notes: 'Quick reset. High protein breakfast.', type: 'routine' },
+    { id: 'work',    time: '7:30 AM', label: 'Commute + Work', notes: '8:30–4:30 work day.', type: 'routine' },
+    { id: 'yoga',    time: '5:30 PM', label: 'Hot Yoga',       notes: 'Evening class. Recovery — let your body decompress.', type: 'workout', cat: 'yoga', wid: 'yoga' },
+    { id: 'dinner',  time: '7:00 PM', label: 'Dinner',         notes: 'Keto or plant-based depending on phase.', type: 'routine' },
+    { id: 'reading', time: '8:30 PM', label: 'Reading',        notes: '30 min. Physical book only.', type: 'routine' },
+    { id: 'lights',  time: '9:00 PM', label: 'Lights out',     notes: '5:30 AM wake = 8.5 hrs.', type: 'routine' },
+  ],
+  4: [ // Thursday — Yoga AM + Bootcamp
+    { id: 'wake',     time: '5:30 AM', label: 'Wake up',        notes: 'Hydrate immediately.', type: 'routine' },
+    { id: 'yoga_am',  time: '6:00 AM', label: 'Yoga AM',        notes: 'Ground yourself before the day.', type: 'workout', cat: 'yoga', wid: 'yoga_am' },
+    { id: 'shower',   time: '7:00 AM', label: 'Home + Shower',  notes: 'Quick reset. High protein breakfast.', type: 'routine' },
+    { id: 'work',     time: '7:30 AM', label: 'Commute + Work', notes: '8:30–4:30 work day.', type: 'routine' },
+    { id: 'bootcamp', time: '5:30 PM', label: 'Bootcamp',       notes: 'High intensity. Leave it all on the floor.', type: 'workout', cat: 'other', wid: 'bootcamp' },
+    { id: 'dinner',   time: '7:00 PM', label: 'Dinner',         notes: 'Keto or plant-based depending on phase.', type: 'routine' },
+    { id: 'reading',  time: '8:30 PM', label: 'Reading',        notes: '30 min. Physical book only.', type: 'routine' },
+    { id: 'lights',   time: '9:00 PM', label: 'Lights out',     notes: '5:30 AM wake = 8.5 hrs.', type: 'routine' },
+  ],
+  5: [ // Friday — CF + Yoga (DOUBLE DAY)
+    { id: 'wake',    time: '5:30 AM', label: 'Wake up',        notes: 'Hydrate immediately. Electrolytes if keto phase.', type: 'routine' },
+    { id: 'cf',      time: '6:00 AM', label: 'CrossFit',       notes: 'Friday strength. Finish the week strong.', type: 'workout', cat: 'cf', wid: 'cf' },
+    { id: 'shower',  time: '7:00 AM', label: 'Home + Shower',  notes: 'Quick reset. High protein breakfast.', type: 'routine' },
+    { id: 'work',    time: '7:30 AM', label: 'Commute + Work', notes: '8:30–4:30 work day.', type: 'routine' },
+    { id: 'yoga',    time: '5:30 PM', label: 'Hot Yoga',       notes: 'TGIF yoga. End the work week right.', type: 'workout', cat: 'yoga', wid: 'yoga' },
+    { id: 'dinner',  time: '7:00 PM', label: 'Dinner',         notes: 'Keto or plant-based depending on phase.', type: 'routine' },
+    { id: 'reading', time: '8:30 PM', label: 'Reading',        notes: '30 min. Physical book only.', type: 'routine' },
+    { id: 'lights',  time: '9:00 PM', label: 'Lights out',     notes: '5:30 AM wake = 8.5 hrs.', type: 'routine' },
+  ],
+  6: [ // Saturday — Walk
+    { id: 'wake',    time: '7:00 AM',  label: 'Wake up',       notes: 'Ease in. You earned a slower morning.', type: 'routine' },
+    { id: 'walk',    time: '8:00 AM',  label: '6-Mile Walk',   notes: 'Steady pace, no rush. Podcast or music. Fresh air.', type: 'workout', cat: 'other', wid: 'walk' },
+    { id: 'brunch',  time: '10:00 AM', label: 'Home + Brunch', notes: 'High protein. Refuel well.', type: 'routine' },
+    { id: 'prep',    time: '2:00 PM',  label: 'Meal Prep',     notes: 'Prep for the week ahead. Future you will thank you.', type: 'routine' },
+    { id: 'reading', time: '8:30 PM',  label: 'Reading',       notes: '30 min. Physical book only.', type: 'routine' },
+    { id: 'lights',  time: '9:00 PM',  label: 'Lights out',    notes: 'Good recovery sleep tonight.', type: 'routine' },
+  ],
+  0: [ // Sunday — Yoga + Rest
+    { id: 'wake',    time: '7:00 AM',  label: 'Wake up',                 notes: 'Ease in. Journaling or quiet morning.', type: 'routine' },
+    { id: 'yoga',    time: '9:00 AM',  label: 'Yoga',                    notes: 'Slow flow. Restore and reflect.', type: 'workout', cat: 'yoga', wid: 'yoga' },
+    { id: 'prep',    time: '11:00 AM', label: 'Meal Prep + Reflection',  notes: 'Prep the week. Write your Sunday reflection.', type: 'routine' },
+    { id: 'reading', time: '8:30 PM',  label: 'Reading',                 notes: '30 min. Physical book only.', type: 'routine' },
+    { id: 'lights',  time: '9:00 PM',  label: 'Lights out',              notes: '5:30 AM wake = 8.5 hrs.', type: 'routine' },
+  ],
+};
+
+// ════════════════════════════════════════
 // STATE
 // ════════════════════════════════════════
 
@@ -113,47 +197,48 @@ let state = {
   sleep: {},
   books: [],
   reflections: {},
+  dailyChecks: {},
   notifEnabled: false,
   currentTab: 'challenge',
   challengeView: 'day',
+  challengeSelectedDate: null,
   trackerSelectedDate: null,
-  viewedWeekOffset: 0    // offset from current week for week view navigation
+  viewedWeekOffset: 0
 };
 
-const DEFAULT_BOOKS = [
-  { title: 'Atomic Habits',          startDate: null, finishDate: null, completed: false, notes: [] },
-  { title: 'The 5 AM Club',          startDate: null, finishDate: null, completed: false, notes: [] },
-  { title: 'You Are a Badass',       startDate: null, finishDate: null, completed: false, notes: [] },
-  { title: 'Untamed',                startDate: null, finishDate: null, completed: false, notes: [] },
-  { title: 'The Power of Now',       startDate: null, finishDate: null, completed: false, notes: [] },
-  { title: 'Girl, Stop Apologizing', startDate: null, finishDate: null, completed: false, notes: [] },
-];
-
 function loadState() {
-  state.startDate            = load(KEY.START, null);
-  state.workouts             = load(KEY.WORKOUTS, {});
-  state.sleep                = load(KEY.SLEEP, {});
-  state.books                = load(KEY.BOOKS, null);
-  state.reflections          = load(KEY.REFLECTIONS, {});
-  state.notifEnabled         = load(KEY.NOTIF, false);
-  state.trackerSelectedDate  = todayStr();
+  state.startDate             = load(KEY.START, null);
+  state.workouts              = load(KEY.WORKOUTS, {});
+  state.sleep                 = load(KEY.SLEEP, {});
+  state.reflections           = load(KEY.REFLECTIONS, {});
+  state.notifEnabled          = load(KEY.NOTIF, false);
+  state.dailyChecks           = load(KEY.DAILY_CHECKS, {});
+  state.trackerSelectedDate   = todayStr();
   state.challengeSelectedDate = todayStr();
-  state.daySchedOpen         = true;
 
-  // Seed default books on first run
-  if (!state.books) {
-    state.books = DEFAULT_BOOKS.map((b, i) => ({ ...b, id: `default_${i}` }));
+  // Books version migration — replaces defaults if stale, keeps user-added books
+  const storedVer = load(KEY.BOOKS_VER, 0);
+  const rawBooks  = load(KEY.BOOKS, null);
+  if (!rawBooks || storedVer < BOOKS_VERSION) {
+    const userBooks = (rawBooks || []).filter(b => b.id && !b.id.startsWith('default_'));
+    state.books = [
+      ...DEFAULT_BOOKS.map((b, i) => ({ ...b, id: `default_${i}` })),
+      ...userBooks
+    ];
     save(KEY.BOOKS, state.books);
+    save(KEY.BOOKS_VER, BOOKS_VERSION);
+  } else {
+    state.books = rawBooks;
   }
-  // Ensure every book has a notes array (migration)
   state.books.forEach(b => { if (!b.notes) b.notes = []; });
 }
 
 function persist() {
-  save(KEY.WORKOUTS, state.workouts);
-  save(KEY.SLEEP, state.sleep);
-  save(KEY.BOOKS, state.books);
-  save(KEY.REFLECTIONS, state.reflections);
+  save(KEY.WORKOUTS,     state.workouts);
+  save(KEY.SLEEP,        state.sleep);
+  save(KEY.BOOKS,        state.books);
+  save(KEY.REFLECTIONS,  state.reflections);
+  save(KEY.DAILY_CHECKS, state.dailyChecks);
 }
 
 // ════════════════════════════════════════
@@ -161,8 +246,7 @@ function persist() {
 // ════════════════════════════════════════
 
 function todayStr() {
-  const d = new Date();
-  return d.toISOString().slice(0, 10);
+  return dateToStr(new Date());
 }
 
 function dateToStr(d) {
@@ -173,7 +257,6 @@ function dateToStr(d) {
 }
 
 function strToDate(s) {
-  // Parse without timezone offset issues
   const [y, m, d] = s.split('-').map(Number);
   return new Date(y, m - 1, d);
 }
@@ -185,15 +268,12 @@ function addDays(dateStr, n) {
 }
 
 function dayOfWeek(dateStr) {
-  // returns 0=Sun,1=Mon,...,6=Sat
   return strToDate(dateStr).getDay();
 }
 
 function programDay(dateStr) {
   if (!state.startDate) return 1;
-  const start = strToDate(state.startDate);
-  const current = strToDate(dateStr);
-  const diff = Math.floor((current - start) / 86400000) + 1;
+  const diff = Math.floor((strToDate(dateStr) - strToDate(state.startDate)) / 86400000) + 1;
   return diff;
 }
 
@@ -209,9 +289,8 @@ function currentPhase(dateStr) {
 }
 
 function getWeekStart(dateStr) {
-  // Week starts on Monday
   const d = strToDate(dateStr);
-  const dow = d.getDay(); // 0=Sun
+  const dow = d.getDay();
   const diff = dow === 0 ? -6 : 1 - dow;
   d.setDate(d.getDate() + diff);
   return dateToStr(d);
@@ -256,11 +335,11 @@ function isWorkoutComplete(dateStr, workoutId) {
   return !!(workoutDataForDate(dateStr)[workoutId]?.done);
 }
 
-function logWorkout(dateStr, workoutId, feel) {
+function logWorkout(dateStr, workoutId, notes = null) {
   if (!state.workouts[dateStr]) state.workouts[dateStr] = {};
   const now = new Date();
   const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-  state.workouts[dateStr][workoutId] = { done: true, time: timeStr, feel };
+  state.workouts[dateStr][workoutId] = { done: true, time: timeStr, notes };
   persist();
 }
 
@@ -272,7 +351,6 @@ function unlogWorkout(dateStr, workoutId) {
   persist();
 }
 
-// Day completion status: 'complete', 'partial', 'none', 'future', 'rest'
 function dayStatus(dateStr) {
   const today = todayStr();
   const sched = scheduleForDate(dateStr);
@@ -285,7 +363,6 @@ function dayStatus(dateStr) {
   return 'partial';
 }
 
-// Returns CSS class for workout circle based on completed categories
 const CAT_ORDER = ['cf', 'yoga', 'other'];
 
 function circleClass(dateStr) {
@@ -302,7 +379,6 @@ function circleClass(dateStr) {
   if (!doneCats.length) return dateStr < today ? 'missed' : '';
   if (doneCats.length === 1) return `cat-${doneCats[0]}`;
   if (doneCats.length === 2) {
-    // Use fixed category order so CSS class always matches: cf → yoga → other
     const sorted = doneCats.sort((a, b) => CAT_ORDER.indexOf(a) - CAT_ORDER.indexOf(b));
     return `split-${sorted.join('-')}`;
   }
@@ -310,18 +386,21 @@ function circleClass(dateStr) {
 }
 
 function getCurrentStreak() {
+  if (!state.startDate) return 0;
   let streak = 0;
   let d = todayStr();
+
   // If today has no logs yet, start from yesterday
   const todaySched = scheduleForDate(d);
-  const todayDone = todaySched.filter(w => isWorkoutComplete(d, w.id)).length;
-  if (todayDone === 0 && todaySched.length > 0) d = addDays(d, -1);
+  const todayHasLog = todaySched.some(w => isWorkoutComplete(d, w.id));
+  if (!todayHasLog && todaySched.length > 0) d = addDays(d, -1);
 
   for (let i = 0; i < PROGRAM_DAYS; i++) {
+    if (d < state.startDate) break; // don't count pre-program days
     const sched = scheduleForDate(d);
     if (sched.length === 0) { d = addDays(d, -1); continue; } // skip rest days
-    const done = sched.filter(w => isWorkoutComplete(d, w.id)).length;
-    if (done > 0) { streak++; d = addDays(d, -1); }
+    const hasLog = sched.some(w => isWorkoutComplete(d, w.id));
+    if (hasLog) { streak++; d = addDays(d, -1); }
     else break;
   }
   return streak;
@@ -350,7 +429,7 @@ function calcSleepHours(bedtime, waketime) {
   const [wh, wm] = waketime.split(':').map(Number);
   let bedMins = bh * 60 + bm;
   let wakeMins = wh * 60 + wm;
-  if (wakeMins <= bedMins) wakeMins += 1440; // next day
+  if (wakeMins <= bedMins) wakeMins += 1440;
   return ((wakeMins - bedMins) / 60).toFixed(1);
 }
 
@@ -378,7 +457,7 @@ function weeklyWorkoutPct(weekStart) {
   let scheduled = 0, completed = 0;
   days.forEach(d => {
     if (d > today) return;
-    if (state.startDate && d < state.startDate) return; // exclude pre-program days
+    if (state.startDate && d < state.startDate) return;
     const sched = scheduleForDate(d);
     scheduled += sched.length;
     sched.forEach(w => { if (isWorkoutComplete(d, w.id)) completed++; });
@@ -387,30 +466,16 @@ function weeklyWorkoutPct(weekStart) {
   return Math.round((completed / scheduled) * 100);
 }
 
-function weeklySleepPct(weekStart) {
-  const days = getWeekDays(weekStart);
-  const today = todayStr();
-  let logged = 0;
-  const validDays = days.filter(d => d <= today && (!state.startDate || d >= state.startDate));
-  validDays.forEach(d => {
-    const s = state.sleep[d];
-    if (s && parseFloat(s.hours) >= 7) logged++;
-  });
-  if (!validDays.length) return 0;
-  return Math.round((logged / validDays.length) * 100);
-}
-
 function weeklyBreakdown(weekStart) {
   const days = getWeekDays(weekStart);
   const today = todayStr();
   const counts = { cf: 0, yoga: 0, other: 0 };
   days.forEach(d => {
     if (d > today) return;
+    if (state.startDate && d < state.startDate) return;
     const sched = scheduleForDate(d);
     const data = workoutDataForDate(d);
-    sched.forEach(w => {
-      if (data[w.id]?.done) counts[w.cat]++;
-    });
+    sched.forEach(w => { if (data[w.id]?.done) counts[w.cat]++; });
   });
   return counts;
 }
@@ -435,20 +500,13 @@ function checkAndFireNotifications() {
   if (lastDate === today) return;
 
   const now = new Date();
-  const hour = now.getHours();
-  const min = now.getMinutes();
-  const timeInMins = hour * 60 + min;
+  const timeInMins = now.getHours() * 60 + now.getMinutes();
 
-  // 5:30 AM morning notification window: 5:30–9:00
   if (timeInMins >= 330 && timeInMins < 540) {
     const day = programDay(today);
     const quote = QUOTES[Math.floor(Math.random() * QUOTES.length)];
     const dayLabel = day >= 1 && day <= PROGRAM_DAYS ? `Day ${day} of ${PROGRAM_DAYS}` : 'Your Challenge';
-    fireNotification(
-      `Good Morning Hot Girl! 🌅 ${dayLabel}`,
-      quote,
-      'morning'
-    );
+    fireNotification(`Good Morning Hot Girl! 🌅 ${dayLabel}`, quote, 'morning');
     save(KEY.NOTIF_DATE, today);
   }
 }
@@ -458,11 +516,7 @@ function checkCheckinNotification() {
   if (Notification.permission !== 'granted') return;
 
   const now = new Date();
-  const hour = now.getHours();
-  const min = now.getMinutes();
-  const timeInMins = hour * 60 + min;
-
-  // 7:30 AM check-in window
+  const timeInMins = now.getHours() * 60 + now.getMinutes();
   const today = todayStr();
   const checkinKey = 'hgs_checkin_' + today;
   if (load(checkinKey, false)) return;
@@ -471,11 +525,7 @@ function checkCheckinNotification() {
     const sched = scheduleForDate(today);
     if (sched.length > 0) {
       const names = sched.map(w => w.label).join(' & ');
-      fireNotification(
-        "Check-in Time! 💪",
-        `Don't forget: ${names} today. You've got this!`,
-        'checkin'
-      );
+      fireNotification("Check-in Time! 💪", `Don't forget: ${names} today. You've got this!`, 'checkin');
       save(checkinKey, true);
     }
   }
@@ -485,7 +535,7 @@ function fireNotification(title, body, tag) {
   if (navigator.serviceWorker?.controller) {
     navigator.serviceWorker.controller.postMessage({ type: 'SHOW_NOTIFICATION', title, body, tag });
   } else if (Notification.permission === 'granted') {
-    new Notification(title, { body, icon: '/icons/icon-192.png', tag });
+    new Notification(title, { body, icon: './icons/icon-192.png', tag });
   }
 }
 
@@ -505,84 +555,95 @@ function renderChallengeTab() {
 
   renderDayViewInChallenge();
   renderWeekViewInChallenge();
-  renderBreakdown();
-}
-
-// Shared schedule checklist — used by both day view and week view
-function renderDaySchedule(dateStr, listEl) {
-  const sched = scheduleForDate(dateStr);
-  const data = workoutDataForDate(dateStr);
-  const today = todayStr();
-  const isFuture = dateStr > today;
-
-  if (!sched.length) {
-    listEl.innerHTML = `<div class="sched-rest">&#x1F60C; Rest day — you've earned it!</div>`;
-    return;
-  }
-
-  listEl.innerHTML = sched.map(w => {
-    const logged = data[w.id];
-    const done = logged?.done;
-    const feel = logged?.feel || '';
-    const time = logged?.time || '';
-    return `
-      <div class="sched-item ${done ? 'sched-done' : ''} ${isFuture ? 'sched-future' : ''}"
-           data-date="${dateStr}" data-workout="${w.id}">
-        <div class="sched-check ${w.cat} ${done ? 'checked' : ''}"></div>
-        <div class="sched-text">
-          <span class="sched-name ${done ? 'sched-strike' : ''}">${w.label}</span>
-          ${time ? `<span class="sched-time">${time}${feel ? ' · ' + feel : ''}</span>` : ''}
-        </div>
-        ${feel ? `<span class="sched-feel">${feel}</span>` : ''}
-      </div>`;
-  }).join('');
-
-  if (!isFuture) {
-    listEl.querySelectorAll('.sched-item').forEach(item => {
-      item.addEventListener('click', () => {
-        const wid = item.dataset.workout;
-        const dstr = item.dataset.date;
-        const w = sched.find(x => x.id === wid);
-        if (isWorkoutComplete(dstr, wid)) {
-          unlogWorkout(dstr, wid);
-          renderChallengeTab();
-          renderTrackerTab();
-        } else {
-          openFeelModal(wid, w.label, dstr, () => {
-            renderChallengeTab();
-            renderTrackerTab();
-            document.getElementById('streak-count').textContent = getCurrentStreak();
-          });
-        }
-      });
-    });
-  }
 }
 
 function renderDayViewInChallenge() {
   const dateStr = todayStr();
-  document.getElementById('today-date-label').textContent = formatDateLabel(dateStr);
+  const d = strToDate(dateStr);
+  const dow = d.getDay();
+  const schedule = DAY_SCHEDULES[dow] || [];
+  const isDoubleDay = [1, 3, 5].includes(dow);
+
+  const dayName = d.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
+  const dateFmt = d.toLocaleDateString('en-US', { month: 'long', day: 'numeric' }).toUpperCase();
+
+  document.getElementById('today-date-label').textContent = `${dayName} · ${dateFmt}`;
 
   const grid = document.getElementById('today-workout-grid');
-  const open = state.daySchedOpen !== false;
 
-  grid.innerHTML = `
-    <div class="sched-block">
-      <button class="sched-toggle-btn" id="sched-toggle-btn">
-        <span>TODAY'S SCHEDULE</span>
-        <span class="sched-arrow ${open ? 'open' : ''}">&#9660;</span>
-      </button>
-      <div class="sched-list-wrap ${open ? '' : 'collapsed'}" id="sched-list-wrap">
-        <div id="today-sched-list"></div>
-      </div>
-    </div>`;
+  let html = `<div class="day-header-row">
+    <div>
+      <div class="day-name-display">${dayName}</div>
+      <div class="day-date-display">${dateFmt}</div>
+    </div>
+    ${isDoubleDay ? '<div class="day-tag">DOUBLE DAY</div>' : ''}
+  </div>`;
 
-  renderDaySchedule(dateStr, document.getElementById('today-sched-list'));
+  schedule.forEach(item => {
+    const isDone = item.type === 'workout'
+      ? isWorkoutComplete(dateStr, item.wid)
+      : !!(state.dailyChecks[dateStr]?.[item.id]);
 
-  document.getElementById('sched-toggle-btn').addEventListener('click', () => {
-    state.daySchedOpen = !state.daySchedOpen;
-    document.getElementById('sched-list-wrap').classList.toggle('collapsed', !state.daySchedOpen);
-    document.querySelector('#sched-toggle-btn .sched-arrow').classList.toggle('open', state.daySchedOpen);
+    const cfNotes = item.type === 'workout' && item.cat === 'cf'
+      ? (state.workouts[dateStr]?.[item.wid]?.notes || '')
+      : '';
+
+    const dotClass = item.type === 'workout' ? item.cat : 'routine';
+
+    html += `
+      <div class="day-sched-item ${isDone ? 'done-item' : ''}"
+           data-id="${item.id}" data-type="${item.type}" data-cat="${item.cat || ''}" data-wid="${item.wid || ''}">
+        <div class="day-item-time">${item.time}</div>
+        <div class="day-item-dot ${dotClass}"></div>
+        <div class="day-item-content">
+          <div class="day-item-label ${isDone ? 'done-strike' : ''}">${item.label}</div>
+          <div class="day-item-notes">${item.notes}</div>
+          ${cfNotes ? `<div class="day-item-cf-notes">"${escHtml(cfNotes)}"</div>` : ''}
+        </div>
+        <div class="day-item-check ${isDone ? 'checked' : ''} ${item.type === 'workout' ? item.cat : ''}"></div>
+      </div>`;
+  });
+
+  grid.innerHTML = html;
+
+  grid.querySelectorAll('.day-sched-item').forEach(el => {
+    el.addEventListener('click', () => {
+      const id   = el.dataset.id;
+      const type = el.dataset.type;
+      const cat  = el.dataset.cat;
+      const wid  = el.dataset.wid;
+
+      if (type === 'workout') {
+        if (isWorkoutComplete(dateStr, wid)) {
+          unlogWorkout(dateStr, wid);
+          renderDayViewInChallenge();
+          renderTrackerTab();
+          document.getElementById('streak-count').textContent = getCurrentStreak();
+        } else if (cat === 'cf') {
+          const item = schedule.find(s => s.id === id);
+          openCfModal(wid, item.label, dateStr, () => {
+            renderDayViewInChallenge();
+            renderTrackerTab();
+            document.getElementById('streak-count').textContent = getCurrentStreak();
+          });
+        } else {
+          logWorkout(dateStr, wid);
+          renderDayViewInChallenge();
+          renderTrackerTab();
+          document.getElementById('streak-count').textContent = getCurrentStreak();
+        }
+      } else {
+        // Routine item — toggle in dailyChecks
+        if (!state.dailyChecks[dateStr]) state.dailyChecks[dateStr] = {};
+        if (state.dailyChecks[dateStr][id]) {
+          delete state.dailyChecks[dateStr][id];
+        } else {
+          state.dailyChecks[dateStr][id] = true;
+        }
+        persist();
+        renderDayViewInChallenge();
+      }
+    });
   });
 }
 
@@ -592,8 +653,15 @@ function renderWeekViewInChallenge() {
   const weekStart = addDays(baseWeekStart, state.viewedWeekOffset * 7);
   const days = getWeekDays(weekStart);
 
-  const weekNum = programWeek(weekStart);
-  document.getElementById('week-nav-title').textContent = `WEEK ${Math.max(1, weekNum)} OF ${WEEKS}`;
+  // Week number relative to program start Monday (not ceil(programDay/7))
+  let weekNum = 1;
+  if (state.startDate) {
+    const programMonday = getMonday(state.startDate);
+    const daysDiff = Math.floor((strToDate(weekStart) - strToDate(programMonday)) / 86400000);
+    weekNum = Math.floor(daysDiff / 7) + 1;
+    weekNum = Math.max(1, Math.min(weekNum, WEEKS));
+  }
+  document.getElementById('week-nav-title').textContent = `WEEK ${weekNum} OF ${WEEKS}`;
 
   const row = document.getElementById('week-grid-row');
   row.innerHTML = days.map(d => {
@@ -628,31 +696,62 @@ function renderWeekDaySchedule(dateStr) {
   el.innerHTML = `
     <div class="week-sched-header">${label}</div>
     <div id="week-sched-list"></div>`;
-  renderDaySchedule(dateStr, document.getElementById('week-sched-list'));
+  renderOldStyleSchedule(dateStr, document.getElementById('week-sched-list'));
 }
 
-function renderBreakdown() {
+// Compact checklist used in Week view day panel
+function renderOldStyleSchedule(dateStr, listEl) {
+  const sched = scheduleForDate(dateStr);
+  const data = workoutDataForDate(dateStr);
   const today = todayStr();
-  const weekStart = getMonday(today);
-  const counts = weeklyBreakdown(weekStart);
+  const isFuture = dateStr > today;
 
-  const items = [
-    { cat: 'cf',    label: 'CrossFit', icon: '🏋️', count: counts.cf },
-    { cat: 'yoga',  label: 'Hot Yoga', icon: '🧘', count: counts.yoga },
-    { cat: 'other', label: 'Other',    icon: '👟', count: counts.other }
-  ].filter(x => x.count > 0);
-
-  const row = document.getElementById('breakdown-row');
-  if (!items.length) {
-    row.innerHTML = `<div style="padding:12px 16px;color:var(--text-3);font-size:13px">No workouts logged this week yet.</div>`;
+  if (!sched.length) {
+    listEl.innerHTML = `<div class="sched-rest">&#x1F60C; Rest day — you've earned it!</div>`;
     return;
   }
-  row.innerHTML = items.map(x => `
-    <div class="breakdown-stat">
-      <div class="stat-icon">${x.icon}</div>
-      <div class="stat-num" style="color:var(--${x.cat === 'cf' ? 'cf' : x.cat === 'yoga' ? 'yoga' : 'other'})">${x.count}</div>
-      <div class="stat-lbl">${x.label}</div>
-    </div>`).join('');
+
+  listEl.innerHTML = sched.map(w => {
+    const logged = data[w.id];
+    const done = logged?.done;
+    const time = logged?.time || '';
+    return `
+      <div class="sched-item ${done ? 'sched-done' : ''} ${isFuture ? 'sched-future' : ''}"
+           data-date="${dateStr}" data-workout="${w.id}">
+        <div class="sched-check ${w.cat} ${done ? 'checked' : ''}"></div>
+        <div class="sched-text">
+          <span class="sched-name ${done ? 'sched-strike' : ''}">${w.label}</span>
+          ${time ? `<span class="sched-time">${time}</span>` : ''}
+        </div>
+      </div>`;
+  }).join('');
+
+  if (!isFuture) {
+    listEl.querySelectorAll('.sched-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const wid  = item.dataset.workout;
+        const dstr = item.dataset.date;
+        const w = sched.find(x => x.id === wid);
+        if (isWorkoutComplete(dstr, wid)) {
+          unlogWorkout(dstr, wid);
+          renderWeekViewInChallenge();
+          renderTrackerTab();
+          document.getElementById('streak-count').textContent = getCurrentStreak();
+        } else if (w.cat === 'cf') {
+          openCfModal(wid, w.label, dstr, () => {
+            renderWeekViewInChallenge();
+            renderTrackerTab();
+            document.getElementById('streak-count').textContent = getCurrentStreak();
+          });
+        } else {
+          logWorkout(dstr, wid);
+          renderWeekViewInChallenge();
+          renderTrackerTab();
+          document.getElementById('streak-count').textContent = getCurrentStreak();
+        }
+      });
+    });
+  }
 }
 
 // ════════════════════════════════════════
@@ -709,33 +808,41 @@ function renderTrackerWorkouts() {
   container.innerHTML = sched.map(w => {
     const logged = data[w.id];
     const done = logged?.done;
-    const feel = logged?.feel || '';
+    const cfNotes = logged?.notes || '';
     const time = logged?.time || '';
     return `
-      <div class="workout-check-item ${done ? 'completed' : ''}" data-date="${dateStr}" data-workout="${w.id}">
+      <div class="workout-check-item ${done ? 'completed' : ''}" data-date="${dateStr}" data-workout="${w.id}" data-cat="${w.cat}">
         <div class="check-box ${w.cat} ${done ? 'checked' : ''}"></div>
         <div class="check-label">
           <div class="check-name ${done ? 'strike' : ''}">${w.label}</div>
-          ${time ? `<div class="check-meta">${time}${feel ? ' · ' + feel : ''}</div>` : ''}
+          ${time ? `<div class="check-meta">${time}</div>` : ''}
+          ${cfNotes ? `<div class="check-meta" style="color:var(--text-3);font-style:italic">"${escHtml(cfNotes)}"</div>` : ''}
         </div>
-        ${feel ? `<div class="feel-chip">${feel}</div>` : ''}
       </div>`;
   }).join('');
 
   container.querySelectorAll('.workout-check-item').forEach(item => {
     item.addEventListener('click', () => {
-      const wid = item.dataset.workout;
+      const wid  = item.dataset.workout;
       const dstr = item.dataset.date;
+      const cat  = item.dataset.cat;
       const w = sched.find(x => x.id === wid);
       if (isWorkoutComplete(dstr, wid)) {
         unlogWorkout(dstr, wid);
         renderTrackerTab();
-        if (dstr === todayStr()) renderChallengeTab();
-      } else {
-        openFeelModal(wid, w.label, dstr, () => {
+        if (dstr === todayStr()) renderDayViewInChallenge();
+        document.getElementById('streak-count').textContent = getCurrentStreak();
+      } else if (cat === 'cf') {
+        openCfModal(wid, w.label, dstr, () => {
           renderTrackerTab();
-          if (dstr === todayStr()) renderChallengeTab();
+          if (dstr === todayStr()) renderDayViewInChallenge();
+          document.getElementById('streak-count').textContent = getCurrentStreak();
         });
+      } else {
+        logWorkout(dstr, wid);
+        renderTrackerTab();
+        if (dstr === todayStr()) renderDayViewInChallenge();
+        document.getElementById('streak-count').textContent = getCurrentStreak();
       }
     });
   });
@@ -745,7 +852,6 @@ function loadSleepForm() {
   const dateStr = state.trackerSelectedDate;
   const existing = state.sleep[dateStr];
 
-  // Quality buttons
   document.querySelectorAll('.quality-btn').forEach(btn => {
     btn.classList.remove('selected');
     if (existing && btn.dataset.quality === existing.quality) btn.classList.add('selected');
@@ -785,10 +891,43 @@ function updateSleepHoursDisplay() {
 function renderWeeklySnapshot() {
   const today = todayStr();
   const weekStart = getMonday(today);
-  const wPct = weeklyWorkoutPct(weekStart);
-  const sPct = weeklySleepPct(weekStart);
-  document.getElementById('snap-workout-pct').textContent = wPct + '%';
-  document.getElementById('snap-sleep-pct').textContent = sPct + '%';
+  const counts = weeklyBreakdown(weekStart);
+
+  // Average sleep hours this week
+  const days = getWeekDays(weekStart);
+  const sleepEntries = days
+    .filter(d => d <= today && (!state.startDate || d >= state.startDate))
+    .map(d => state.sleep[d])
+    .filter(s => s && s.hours);
+  const avgSleep = sleepEntries.length
+    ? (sleepEntries.reduce((sum, s) => sum + parseFloat(s.hours), 0) / sleepEntries.length).toFixed(1)
+    : null;
+
+  const container = document.getElementById('weekly-snapshot-container');
+
+  container.innerHTML = `
+    <div class="snapshot-grid">
+      <div class="snap-stat">
+        <div class="snap-icon">🏋️</div>
+        <div class="snap-val cf-color">${counts.cf}</div>
+        <div class="snap-lbl">CrossFit</div>
+      </div>
+      <div class="snap-stat">
+        <div class="snap-icon">🧘</div>
+        <div class="snap-val yoga-color">${counts.yoga}</div>
+        <div class="snap-lbl">Hot Yoga</div>
+      </div>
+      <div class="snap-stat">
+        <div class="snap-icon">👟</div>
+        <div class="snap-val other-color">${counts.other}</div>
+        <div class="snap-lbl">Other</div>
+      </div>
+      <div class="snap-stat">
+        <div class="snap-icon">😴</div>
+        <div class="snap-val">${avgSleep !== null ? avgSleep : '—'}</div>
+        <div class="snap-lbl">Avg Sleep Hrs</div>
+      </div>
+    </div>`;
 }
 
 // ════════════════════════════════════════
@@ -809,7 +948,7 @@ function renderReadingTab() {
 
   list.innerHTML = books.map(book => {
     const status = book.completed ? 'completed' : book.startDate ? 'reading' : 'unstarted';
-    const badge = book.completed ? '&#x1F4AA;' : '';
+    const badge = book.completed ? '<span class="book-complete-badge">✓</span>' : '';
     const statusLabel = book.completed ? 'Completed' : book.startDate ? 'Reading' : 'Up Next';
     const dateStr = book.startDate
       ? (book.completed
@@ -830,8 +969,9 @@ function renderReadingTab() {
         <div class="book-info">
           <div class="book-title-row">
             <div class="book-title">${escHtml(book.title)}</div>
-            ${badge ? `<span class="book-complete-badge">${badge}</span>` : ''}
+            ${badge}
           </div>
+          ${book.author ? `<div class="book-author">${escHtml(book.author)}${book.weeks ? ' · <span class="book-weeks">' + escHtml(book.weeks) + '</span>' : ''}</div>` : ''}
           ${dateStr ? `<div class="book-dates">${dateStr}</div>` : ''}
           <div class="book-status ${status}">${statusLabel}</div>
           <div class="book-actions">
@@ -912,7 +1052,6 @@ function renderProgressTab() {
   const weekStart = getMonday(today);
   const wPct = weeklyWorkoutPct(weekStart);
 
-  // Stats cards
   document.getElementById('progress-stats-row').innerHTML = `
     <div class="stat-card">
       <div class="stat-val">${streak}</div>
@@ -931,9 +1070,7 @@ function renderProgressTab() {
       <div class="stat-sub">This Week</div>
     </div>`;
 
-  // Phase progress
   const phaseStartDay = phaseIdx * 28 + 1;
-  const phaseEndDay = (phaseIdx + 1) * 28;
   const phasePct = Math.min(100, Math.max(0, Math.round(((day - phaseStartDay) / 28) * 100)));
   document.getElementById('phase-progress-section').innerHTML = `
     <div class="phase-row">
@@ -943,29 +1080,23 @@ function renderProgressTab() {
     <div class="phase-bar"><div class="phase-fill" style="width:${phasePct}%"></div></div>
     <div style="font-size:12px;color:var(--text-3);margin-top:8px">${phasePct}% complete</div>`;
 
-  // Recap card if program done
-  if (day > PROGRAM_DAYS) {
-    const recapEl = document.getElementById('challenge-grid-section');
-    if (!document.getElementById('recap-card')) {
-      const recap = document.createElement('div');
-      recap.id = 'recap-card';
-      recap.className = 'recap-card';
-      recap.innerHTML = `
-        <div class="recap-title"><span>Program Complete! 🏆</span></div>
-        <div class="recap-sub">84 Days. You showed up.</div>
-        <div class="recap-stats">
-          <div class="recap-stat"><div class="recap-stat-val">${sessions}</div><div class="recap-stat-lbl">Sessions</div></div>
-          <div class="recap-stat"><div class="recap-stat-val">${streak}</div><div class="recap-stat-lbl">Best Streak</div></div>
-          <div class="recap-stat"><div class="recap-stat-val">${state.books.filter(b => b.completed).length}</div><div class="recap-stat-lbl">Books Read</div></div>
-        </div>`;
-      recapEl.prepend(recap);
-    }
+  if (day > PROGRAM_DAYS && !document.getElementById('recap-card')) {
+    const recap = document.createElement('div');
+    recap.id = 'recap-card';
+    recap.className = 'recap-card';
+    recap.innerHTML = `
+      <div class="recap-title"><span>Program Complete! 🏆</span></div>
+      <div class="recap-sub">84 Days. You showed up.</div>
+      <div class="recap-stats">
+        <div class="recap-stat"><div class="recap-stat-val">${sessions}</div><div class="recap-stat-lbl">Sessions</div></div>
+        <div class="recap-stat"><div class="recap-stat-val">${streak}</div><div class="recap-stat-lbl">Best Streak</div></div>
+        <div class="recap-stat"><div class="recap-stat-val">${state.books.filter(b => b.completed).length}</div><div class="recap-stat-lbl">Books Read</div></div>
+      </div>`;
+    document.getElementById('challenge-grid-section').prepend(recap);
   }
 
-  // 12-week grid
   renderChallengeGrid();
 
-  // Sunday reflection
   const dow = strToDate(today).getDay();
   const reflSec = document.getElementById('reflection-section');
   if (dow === 0) {
@@ -985,7 +1116,7 @@ function renderChallengeGrid() {
 
   for (let w = 1; w <= WEEKS; w++) {
     const weekAnchorDate = addDays(state.startDate, (w - 1) * 7);
-    const weekMonday = getMonday(weekAnchorDate); // align to calendar week Mon–Sun
+    const weekMonday = getMonday(weekAnchorDate);
     const days = getWeekDays(weekMonday);
 
     html += `<div class="grid-week-row"><div class="grid-week-label">${w}</div>`;
@@ -1000,22 +1131,30 @@ function renderChallengeGrid() {
 }
 
 // ════════════════════════════════════════
-// FEEL MODAL
+// CF NOTES MODAL
+// ════════════════════════════════════════
+
+let cfPending = { date: null, workout: null, cb: null };
+
+function openCfModal(workoutId, workoutLabel, dateStr, cb) {
+  cfPending = { date: dateStr, workout: workoutId, cb };
+  document.getElementById('cf-modal-sub').textContent = `${workoutLabel} · ${formatShortDate(dateStr)}`;
+  document.getElementById('cf-notes-input').value = state.workouts[dateStr]?.[workoutId]?.notes || '';
+  document.getElementById('cf-modal').classList.add('open');
+  setTimeout(() => document.getElementById('cf-notes-input').focus(), 300);
+}
+
+function closeCfModal() {
+  document.getElementById('cf-modal').classList.remove('open');
+  cfPending = { date: null, workout: null, cb: null };
+}
+
+// ════════════════════════════════════════
+// FEEL MODAL (kept for backwards compat, not actively triggered)
 // ════════════════════════════════════════
 
 let feelCallback = null;
 let feelPending = { date: null, workout: null, selectedFeel: null };
-
-function openFeelModal(workoutId, workoutLabel, dateStr, cb) {
-  feelPending = { date: dateStr, workout: workoutId, selectedFeel: null };
-  feelCallback = cb;
-
-  document.getElementById('feel-modal-title').textContent = `How did ${workoutLabel} feel?`;
-  document.getElementById('feel-modal-sub').textContent = formatShortDate(dateStr);
-
-  document.querySelectorAll('.feel-option').forEach(o => o.classList.remove('selected'));
-  document.getElementById('feel-modal').classList.add('open');
-}
 
 function closeFeelModal() {
   document.getElementById('feel-modal').classList.remove('open');
@@ -1060,8 +1199,7 @@ function closeFinishBookModal() {
 
 function openSettings() {
   document.getElementById('settings-start-date').value = state.startDate || '';
-  const sw = document.getElementById('settings-notif-switch');
-  sw.classList.toggle('on', state.notifEnabled);
+  document.getElementById('settings-notif-switch').classList.toggle('on', state.notifEnabled);
   document.getElementById('settings-overlay').classList.add('open');
 }
 
@@ -1145,14 +1283,10 @@ function launchApp() {
   document.getElementById('app').classList.remove('hidden');
   document.getElementById('onboarding').classList.add('hidden');
 
-  // Streak badge
-  const streak = getCurrentStreak();
-  document.getElementById('streak-count').textContent = streak;
+  document.getElementById('streak-count').textContent = getCurrentStreak();
 
-  // Initial tab
   switchTab('challenge');
 
-  // Notification checks
   checkAndFireNotifications();
   checkCheckinNotification();
 }
@@ -1224,7 +1358,7 @@ function attachEvents() {
     const title = document.getElementById('book-title-input').value.trim();
     if (!title) { document.getElementById('book-title-input').focus(); return; }
     const startDate = document.getElementById('book-start-input').value;
-    const book = { id: Date.now().toString(), title, startDate, finishDate: null, completed: false };
+    const book = { id: Date.now().toString(), title, startDate, finishDate: null, completed: false, notes: [] };
     state.books.push(book);
     persist();
     closeBookModal();
@@ -1245,7 +1379,7 @@ function attachEvents() {
     renderReadingTab();
   });
 
-  // Feel modal options
+  // Feel modal — close only (not actively used for logging anymore)
   document.querySelectorAll('.feel-option').forEach(opt => {
     opt.addEventListener('click', () => {
       document.querySelectorAll('.feel-option').forEach(o => o.classList.remove('selected'));
@@ -1253,25 +1387,32 @@ function attachEvents() {
       feelPending.selectedFeel = opt.dataset.feel;
     });
   });
-
-  // Feel modal confirm
-  document.getElementById('feel-confirm-btn').addEventListener('click', () => {
-    if (!feelPending.date || !feelPending.workout) return;
-    const feel = feelPending.selectedFeel || '💪';
-    logWorkout(feelPending.date, feelPending.workout, feel);
-    const cb = feelCallback;
-    closeFeelModal();
-    if (cb) cb();
-    // Update streak
-    document.getElementById('streak-count').textContent = getCurrentStreak();
-  });
-
-  // Close feel modal by tapping backdrop
+  document.getElementById('feel-confirm-btn').addEventListener('click', closeFeelModal);
   document.getElementById('feel-modal').addEventListener('click', e => {
     if (e.target === document.getElementById('feel-modal')) closeFeelModal();
   });
 
-  // Close book modal by backdrop
+  // CF notes modal
+  document.getElementById('cf-notes-save').addEventListener('click', () => {
+    if (!cfPending.date || !cfPending.workout) return;
+    const notes = document.getElementById('cf-notes-input').value.trim();
+    logWorkout(cfPending.date, cfPending.workout, notes || null);
+    const cb = cfPending.cb;
+    closeCfModal();
+    if (cb) cb();
+  });
+  document.getElementById('cf-notes-skip').addEventListener('click', () => {
+    if (!cfPending.date || !cfPending.workout) return;
+    logWorkout(cfPending.date, cfPending.workout, null);
+    const cb = cfPending.cb;
+    closeCfModal();
+    if (cb) cb();
+  });
+  document.getElementById('cf-modal').addEventListener('click', e => {
+    if (e.target === document.getElementById('cf-modal')) closeCfModal();
+  });
+
+  // Close book modals by backdrop
   document.getElementById('book-modal').addEventListener('click', e => {
     if (e.target === document.getElementById('book-modal')) closeBookModal();
   });
@@ -1334,11 +1475,8 @@ function attachEvents() {
 // ════════════════════════════════════════
 
 async function init() {
-  // Register service worker
   if ('serviceWorker' in navigator) {
-    try {
-      await navigator.serviceWorker.register('./sw.js');
-    } catch (e) { /* non-critical */ }
+    try { await navigator.serviceWorker.register('./sw.js'); } catch {}
   }
 
   loadState();
