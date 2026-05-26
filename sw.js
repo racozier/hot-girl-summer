@@ -1,4 +1,4 @@
-const CACHE = 'hgs-v2';
+const CACHE = 'hgs-v3';
 const ASSETS = ['./', './index.html', './app.css', './app.js', './icons/icon-192.png', './icons/icon-512.png'];
 
 self.addEventListener('install', e => {
