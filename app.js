@@ -786,9 +786,16 @@ function renderWeekDaySchedule(dateStr) {
   }
 
   schedule.forEach(item => {
-    const isDone = item.type === 'workout'
-      ? isWorkoutComplete(dateStr, item.wid)
-      : !!(state.dailyChecks[dateStr]?.[item.id]);
+    let isDone;
+    if (item.type === 'workout') {
+      isDone = isWorkoutComplete(dateStr, item.wid);
+    } else if (item.id === 'wake') {
+      isDone = !!(state.sleep[dateStr]?.waketime);
+    } else if (item.id === 'lights') {
+      isDone = !!(state.sleep[dateStr]?.bedtime);
+    } else {
+      isDone = !!(state.dailyChecks[dateStr]?.[item.id]);
+    }
     const cfNotes = item.type === 'workout' && item.cat === 'cf'
       ? (state.workouts[dateStr]?.[item.wid]?.notes || '')
       : '';
@@ -931,7 +938,25 @@ function renderOldStyleSchedule(dateStr, listEl) {
 // ════════════════════════════════════════
 
 function renderTrackerTab() {
-  renderWeeklySnapshot();
+  const container = document.getElementById('weekly-snapshot-container');
+
+  if (!state.startDate) {
+    container.innerHTML = buildSnapshotCard(getMonday(todayStr()), 1, true);
+    return;
+  }
+
+  const today = todayStr();
+  const currentWeekStart = getMonday(today);
+  const programMonday = getMonday(state.startDate);
+  const daysDiff = Math.floor((strToDate(currentWeekStart) - strToDate(programMonday)) / 86400000);
+  const currentWeekNum = Math.max(1, Math.min(Math.floor(daysDiff / 7) + 1, WEEKS));
+
+  let html = buildSnapshotCard(currentWeekStart, currentWeekNum, true);
+  for (let w = currentWeekNum - 1; w >= 1; w--) {
+    const weekStart = addDays(programMonday, (w - 1) * 7);
+    html += buildSnapshotCard(weekStart, w, false);
+  }
+  container.innerHTML = html;
 }
 
 function renderWeekStrip() {
@@ -1057,12 +1082,10 @@ function updateSleepHoursDisplay() {
   }
 }
 
-function renderWeeklySnapshot() {
+function buildSnapshotCard(weekStart, weekNum, isCurrent) {
   const today = todayStr();
-  const weekStart = getMonday(today);
   const counts = weeklyBreakdown(weekStart);
 
-  // Average sleep hours this week
   const days = getWeekDays(weekStart);
   const sleepEntries = days
     .filter(d => d <= today && (!state.startDate || d >= state.startDate))
@@ -1072,29 +1095,32 @@ function renderWeeklySnapshot() {
     ? (sleepEntries.reduce((sum, s) => sum + parseFloat(s.hours), 0) / sleepEntries.length).toFixed(1)
     : null;
 
-  const container = document.getElementById('weekly-snapshot-container');
+  const label = isCurrent ? `WEEK ${weekNum} · CURRENT` : `WEEK ${weekNum}`;
 
-  container.innerHTML = `
-    <div class="snapshot-grid">
-      <div class="snap-stat">
-        <div class="snap-icon">🏋️</div>
-        <div class="snap-val cf-color">${counts.cf}</div>
-        <div class="snap-lbl">CrossFit</div>
-      </div>
-      <div class="snap-stat">
-        <div class="snap-icon">🧘</div>
-        <div class="snap-val yoga-color">${counts.yoga}</div>
-        <div class="snap-lbl">Hot Yoga</div>
-      </div>
-      <div class="snap-stat">
-        <div class="snap-icon">👟</div>
-        <div class="snap-val other-color">${counts.other}</div>
-        <div class="snap-lbl">Other</div>
-      </div>
-      <div class="snap-stat">
-        <div class="snap-icon">😴</div>
-        <div class="snap-val">${avgSleep !== null ? avgSleep : '—'}</div>
-        <div class="snap-lbl">Avg Sleep Hrs</div>
+  return `
+    <div class="snapshot-card ${isCurrent ? 'snapshot-current' : ''}">
+      <div class="snapshot-week-label">${label}</div>
+      <div class="snapshot-grid">
+        <div class="snap-stat">
+          <div class="snap-icon">🏋️</div>
+          <div class="snap-val cf-color">${counts.cf}</div>
+          <div class="snap-lbl">CrossFit</div>
+        </div>
+        <div class="snap-stat">
+          <div class="snap-icon">🧘</div>
+          <div class="snap-val yoga-color">${counts.yoga}</div>
+          <div class="snap-lbl">Hot Yoga</div>
+        </div>
+        <div class="snap-stat">
+          <div class="snap-icon">👟</div>
+          <div class="snap-val other-color">${counts.other}</div>
+          <div class="snap-lbl">Other</div>
+        </div>
+        <div class="snap-stat">
+          <div class="snap-icon">😴</div>
+          <div class="snap-val">${avgSleep !== null ? avgSleep : '—'}</div>
+          <div class="snap-lbl">Avg Sleep Hrs</div>
+        </div>
       </div>
     </div>`;
 }

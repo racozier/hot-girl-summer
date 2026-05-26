@@ -486,16 +486,24 @@ input[type="date"], input[type="time"] { color-scheme: dark; }
   color: var(--text-2);
 }
 
-/* Tracker header */
-.tracker-snap-header {
-  font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
-  color: var(--text-3); padding: 16px 16px 8px;
+/* Tracker snapshot cards */
+.snapshot-card {
+  padding: 0 0 4px;
 }
+.snapshot-card + .snapshot-card {
+  border-top: 1px solid rgba(255,255,255,.06);
+  margin-top: 4px;
+}
+.snapshot-week-label {
+  font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--text-3); padding: 14px 16px 6px;
+}
+.snapshot-current .snapshot-week-label { color: var(--yoga); }
 
-/* Weekly Snapshot */
+/* Snapshot grid */
 .snapshot-grid {
   display: grid; grid-template-columns: repeat(4, 1fr);
-  gap: 8px; padding: 0 16px 16px;
+  gap: 8px; padding: 0 16px 12px;
 }
 .snap-stat {
   background: var(--surface-2);
