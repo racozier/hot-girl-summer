@@ -871,14 +871,30 @@ function renderWeekDaySchedule(dateStr) {
             document.getElementById('streak-count').textContent = getCurrentStreak();
           }
         } else {
-          if (!state.dailyChecks[dateStr]) state.dailyChecks[dateStr] = {};
-          if (state.dailyChecks[dateStr][id]) {
-            delete state.dailyChecks[dateStr][id];
+          if (id === 'wake') {
+            openWakeModal(dateStr, schedItem, () => {
+              renderWeekDaySchedule(dateStr);
+              renderWeekViewInChallenge();
+              if (dateStr === todayStr()) renderDayViewInChallenge();
+              renderTrackerTab();
+            });
+          } else if (id === 'lights') {
+            openLightsModal(dateStr, schedItem, () => {
+              renderWeekDaySchedule(dateStr);
+              renderWeekViewInChallenge();
+              if (dateStr === todayStr()) renderDayViewInChallenge();
+              renderTrackerTab();
+            });
           } else {
-            state.dailyChecks[dateStr][id] = true;
+            if (!state.dailyChecks[dateStr]) state.dailyChecks[dateStr] = {};
+            if (state.dailyChecks[dateStr][id]) {
+              delete state.dailyChecks[dateStr][id];
+            } else {
+              state.dailyChecks[dateStr][id] = true;
+            }
+            persist();
+            renderWeekDaySchedule(dateStr);
           }
-          persist();
-          renderWeekDaySchedule(dateStr);
         }
       });
     });
