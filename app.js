@@ -588,15 +588,32 @@ function renderDayViewInChallenge() {
   </div>`;
 
   schedule.forEach(item => {
-    const isDone = item.type === 'workout'
-      ? isWorkoutComplete(dateStr, item.wid)
-      : !!(state.dailyChecks[dateStr]?.[item.id]);
+    let isDone;
+    if (item.type === 'workout') {
+      isDone = isWorkoutComplete(dateStr, item.wid);
+    } else if (item.id === 'wake') {
+      isDone = !!(state.sleep[dateStr]?.waketime);
+    } else if (item.id === 'lights') {
+      isDone = !!(state.sleep[dateStr]?.bedtime);
+    } else {
+      isDone = !!(state.dailyChecks[dateStr]?.[item.id]);
+    }
 
     const cfNotes = item.type === 'workout' && item.cat === 'cf'
       ? (state.workouts[dateStr]?.[item.wid]?.notes || '')
       : '';
 
     const dotClass = item.type === 'workout' ? item.cat : 'routine';
+
+    let subInfo = '';
+    if (item.id === 'wake' && isDone) {
+      const sl = state.sleep[dateStr];
+      subInfo = `<div class="day-item-sub-info">${sl.waketime ? `🕐 ${sl.waketime}` : ''} ${sl.quality ? `· ${sl.quality}` : ''}</div>`;
+    } else if (item.id === 'lights' && isDone) {
+      const sl = state.sleep[dateStr];
+      const hoursStr = sl.hours ? ` · ${sl.hours}h sleep` : '';
+      subInfo = `<div class="day-item-sub-info">${sl.bedtime ? `🌙 ${sl.bedtime}` : ''}${hoursStr}${sl.favPart ? `<div class="day-item-favpart">"${escHtml(sl.favPart)}"</div>` : ''}</div>`;
+    }
 
     html += `
       <div class="day-sched-item ${isDone ? 'done-item' : ''}"
@@ -607,6 +624,7 @@ function renderDayViewInChallenge() {
           <div class="day-item-label ${isDone ? 'done-strike' : ''}">${item.label}</div>
           <div class="day-item-notes">${item.notes}</div>
           ${cfNotes ? `<div class="day-item-cf-notes">"${escHtml(cfNotes)}"</div>` : ''}
+          ${subInfo}
         </div>
         <div class="day-item-check ${isDone ? 'checked' : ''} ${item.type === 'workout' ? item.cat : ''}"></div>
       </div>`;
@@ -686,15 +704,23 @@ function renderDayViewInChallenge() {
           document.getElementById('streak-count').textContent = getCurrentStreak();
         }
       } else {
-        // Routine item — toggle in dailyChecks
-        if (!state.dailyChecks[dateStr]) state.dailyChecks[dateStr] = {};
-        if (state.dailyChecks[dateStr][id]) {
-          delete state.dailyChecks[dateStr][id];
+        if (id === 'wake') {
+          const schedItem = schedule.find(s => s.id === 'wake');
+          openWakeModal(dateStr, schedItem, () => { renderDayViewInChallenge(); renderTrackerTab(); });
+        } else if (id === 'lights') {
+          const schedItem = schedule.find(s => s.id === 'lights');
+          openLightsModal(dateStr, schedItem, () => { renderDayViewInChallenge(); renderTrackerTab(); });
         } else {
-          state.dailyChecks[dateStr][id] = true;
+          // Routine item — toggle in dailyChecks
+          if (!state.dailyChecks[dateStr]) state.dailyChecks[dateStr] = {};
+          if (state.dailyChecks[dateStr][id]) {
+            delete state.dailyChecks[dateStr][id];
+          } else {
+            state.dailyChecks[dateStr][id] = true;
+          }
+          persist();
+          renderDayViewInChallenge();
         }
-        persist();
-        renderDayViewInChallenge();
       }
     });
   });
@@ -905,9 +931,6 @@ function renderOldStyleSchedule(dateStr, listEl) {
 // ════════════════════════════════════════
 
 function renderTrackerTab() {
-  renderWeekStrip();
-  renderTrackerWorkouts();
-  loadSleepForm();
   renderWeeklySnapshot();
 }
 
@@ -1256,7 +1279,11 @@ function renderChallengeGrid() {
     days.forEach(d => {
       const cls = circleClass(d);
       const isToday = d === today;
-      html += `<div class="grid-circle ${cls} ${isToday ? 'today-ring' : ''}"></div>`;
+      const sleepHrs = state.sleep[d]?.hours;
+      const showSleep = sleepHrs && cls !== 'future' && cls !== 'rest' && cls !== '';
+      html += `<div class="grid-circle ${cls} ${isToday ? 'today-ring' : ''}">
+        ${showSleep ? `<span class="grid-sleep-hrs">${sleepHrs}</span>` : ''}
+      </div>`;
     });
     html += `</div>`;
   }
@@ -1280,6 +1307,54 @@ function openCfModal(workoutId, workoutLabel, dateStr, cb) {
 function closeCfModal() {
   document.getElementById('cf-modal').classList.remove('open');
   cfPending = { date: null, workout: null, cb: null };
+}
+
+// ════════════════════════════════════════
+// WAKE UP MODAL
+// ════════════════════════════════════════
+
+let wakePending = { date: null, item: null, cb: null };
+let wakeSelectedQuality = null;
+
+function openWakeModal(dateStr, schedItem, cb) {
+  wakePending = { date: dateStr, item: schedItem, cb };
+  wakeSelectedQuality = null;
+  const existing = state.sleep[dateStr];
+  document.getElementById('wake-modal-sub').textContent = schedItem ? `${schedItem.time} · ${schedItem.label}` : '';
+  document.getElementById('wake-time-input').value = existing?.waketime || schedItem?.time?.replace(' AM','').replace(' PM','') || '';
+  document.querySelectorAll('#wake-quality-row .sleep-q-btn').forEach(b => {
+    b.classList.remove('selected');
+    if (existing?.quality && b.dataset.quality === existing.quality) {
+      b.classList.add('selected');
+      wakeSelectedQuality = existing.quality;
+    }
+  });
+  document.getElementById('wake-modal').classList.add('open');
+}
+
+function closeWakeModal() {
+  document.getElementById('wake-modal').classList.remove('open');
+  wakePending = { date: null, item: null, cb: null };
+  wakeSelectedQuality = null;
+}
+
+// ════════════════════════════════════════
+// LIGHTS OUT MODAL
+// ════════════════════════════════════════
+
+let lightsPending = { date: null, item: null, cb: null };
+
+function openLightsModal(dateStr, schedItem, cb) {
+  lightsPending = { date: dateStr, item: schedItem, cb };
+  const existing = state.sleep[dateStr];
+  document.getElementById('lights-time-input').value = existing?.bedtime || '';
+  document.getElementById('lights-favpart-input').value = existing?.favPart || '';
+  document.getElementById('lights-modal').classList.add('open');
+}
+
+function closeLightsModal() {
+  document.getElementById('lights-modal').classList.remove('open');
+  lightsPending = { date: null, item: null, cb: null };
 }
 
 // ════════════════════════════════════════
@@ -1458,29 +1533,53 @@ function attachEvents() {
     renderWeekViewInChallenge();
   });
 
-  // Sleep quality picker
-  document.querySelectorAll('.quality-btn').forEach(btn => {
+  // Wake quality picker
+  document.querySelectorAll('#wake-quality-row .sleep-q-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('.quality-btn').forEach(b => b.classList.remove('selected'));
+      document.querySelectorAll('#wake-quality-row .sleep-q-btn').forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
+      wakeSelectedQuality = btn.dataset.quality;
     });
   });
 
-  // Sleep time inputs
-  document.getElementById('sleep-bedtime').addEventListener('input', updateSleepHoursDisplay);
-  document.getElementById('sleep-waketime').addEventListener('input', updateSleepHoursDisplay);
+  // Wake modal confirm
+  document.getElementById('wake-confirm-btn').addEventListener('click', () => {
+    if (!wakePending.date) return;
+    const waketime = document.getElementById('wake-time-input').value;
+    const quality = wakeSelectedQuality || 'OK';
+    const dateStr = wakePending.date;
+    if (!state.sleep[dateStr]) state.sleep[dateStr] = {};
+    state.sleep[dateStr].waketime = waketime;
+    state.sleep[dateStr].quality = quality;
+    const hours = calcSleepHours(state.sleep[dateStr].bedtime, waketime);
+    if (hours) state.sleep[dateStr].hours = hours;
+    persist();
+    const cb = wakePending.cb;
+    closeWakeModal();
+    if (cb) cb();
+  });
+  document.getElementById('wake-modal').addEventListener('click', e => {
+    if (e.target === document.getElementById('wake-modal')) closeWakeModal();
+  });
 
-  // Save sleep
-  document.getElementById('save-sleep-btn').addEventListener('click', () => {
-    const quality = document.querySelector('.quality-btn.selected')?.dataset.quality || 'OK';
-    const bedtime  = document.getElementById('sleep-bedtime').value;
-    const waketime = document.getElementById('sleep-waketime').value;
-    saveSleepLog(state.trackerSelectedDate, quality, bedtime, waketime);
-    const btn = document.getElementById('save-sleep-btn');
-    btn.textContent = '✓ Saved';
-    btn.classList.add('saved');
-    renderWeeklySnapshot();
-    setTimeout(() => { btn.textContent = 'Update Sleep Log'; }, 2000);
+  // Lights modal confirm
+  document.getElementById('lights-confirm-btn').addEventListener('click', () => {
+    if (!lightsPending.date) return;
+    const bedtime = document.getElementById('lights-time-input').value;
+    const favPart = document.getElementById('lights-favpart-input').value.trim();
+    const dateStr = lightsPending.date;
+    if (!state.sleep[dateStr]) state.sleep[dateStr] = {};
+    state.sleep[dateStr].bedtime = bedtime;
+    if (favPart) state.sleep[dateStr].favPart = favPart;
+    const hours = calcSleepHours(bedtime, state.sleep[dateStr].waketime);
+    if (hours) state.sleep[dateStr].hours = hours;
+    persist();
+    const cb = lightsPending.cb;
+    closeLightsModal();
+    if (cb) cb();
+  });
+  document.getElementById('lights-modal').addEventListener('click', e => {
+    if (e.target === document.getElementById('lights-modal')) closeLightsModal();
   });
 
   // Add book button

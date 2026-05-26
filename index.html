@@ -101,59 +101,8 @@
 
     <!-- ── TRACKER TAB ── -->
     <section id="tab-tracker" class="tab-content">
-
-      <!-- Week Strip -->
-      <div class="week-strip" id="tracker-week-strip">
-        <!-- populated by JS -->
-      </div>
-
-      <!-- Workout Section -->
-      <div class="section-block">
-        <div class="section-block-title">WORKOUTS</div>
-        <div id="tracker-workout-list">
-          <!-- populated by JS -->
-        </div>
-      </div>
-
-      <div class="divider"></div>
-
-      <!-- Sleep Log -->
-      <div class="section-block">
-        <div class="section-block-title">SLEEP LOG</div>
-        <div class="sleep-log">
-          <div class="quality-row">
-            <button class="quality-btn great" data-quality="Great">😴 Great</button>
-            <button class="quality-btn ok"    data-quality="OK">😐 OK</button>
-            <button class="quality-btn poor"  data-quality="Poor">😫 Poor</button>
-          </div>
-          <div class="time-pickers">
-            <div class="time-field">
-              <label>Bedtime</label>
-              <input type="time" id="sleep-bedtime" value="21:00">
-            </div>
-            <div class="time-field">
-              <label>Wake Time</label>
-              <input type="time" id="sleep-waketime" value="05:30">
-            </div>
-          </div>
-          <div class="sleep-hours-display">
-            <span class="sleep-hours-label">Total Sleep</span>
-            <span class="sleep-hours-value" id="sleep-hours-display">—</span>
-          </div>
-          <button class="save-btn" id="save-sleep-btn">Save Sleep Log</button>
-        </div>
-      </div>
-
-      <div class="divider"></div>
-
-      <!-- Weekly Snapshot -->
-      <div class="section-block">
-        <div class="section-block-title">THIS WEEK'S SNAPSHOT</div>
-        <div id="weekly-snapshot-container">
-          <!-- populated by JS -->
-        </div>
-      </div>
-
+      <div class="tracker-snap-header">THIS WEEK'S SNAPSHOT</div>
+      <div id="weekly-snapshot-container"></div>
     </section>
 
     <!-- ── READING TAB ── -->
@@ -328,6 +277,45 @@
     </div>
     <button class="modal-confirm-btn" id="cf-notes-save">Log CrossFit &#x2713;</button>
     <button class="skip-notes-btn" id="cf-notes-skip">Skip notes &amp; log</button>
+  </div>
+</div>
+
+<!-- ═══ WAKE UP MODAL ═══ -->
+<div class="modal-overlay" id="wake-modal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Good Morning! ☀️</div>
+    <div class="modal-subtitle" id="wake-modal-sub"></div>
+    <div class="form-group">
+      <label class="form-label">Wake Time</label>
+      <input type="time" id="wake-time-input" class="form-input">
+    </div>
+    <div class="form-group">
+      <label class="form-label">How did you sleep?</label>
+      <div class="sleep-q-row" id="wake-quality-row">
+        <div class="sleep-q-btn" data-quality="Great">😊<span>Great</span></div>
+        <div class="sleep-q-btn" data-quality="OK">😐<span>OK</span></div>
+        <div class="sleep-q-btn" data-quality="Poor">😫<span>Poor</span></div>
+      </div>
+    </div>
+    <button class="modal-confirm-btn" id="wake-confirm-btn">Log Wake Up</button>
+  </div>
+</div>
+
+<!-- ═══ LIGHTS OUT MODAL ═══ -->
+<div class="modal-overlay" id="lights-modal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Good Night! 🌙</div>
+    <div class="form-group">
+      <label class="form-label">Bedtime</label>
+      <input type="time" id="lights-time-input" class="form-input">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Fav part of today?</label>
+      <textarea class="form-input" id="lights-favpart-input" rows="3" placeholder="What was the best moment?" style="resize:none;min-height:80px"></textarea>
+    </div>
+    <button class="modal-confirm-btn" id="lights-confirm-btn">Good Night ✓</button>
   </div>
 </div>
 
