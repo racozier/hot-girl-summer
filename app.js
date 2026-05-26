@@ -615,11 +615,11 @@ function renderDayViewInChallenge() {
     let subInfo = '';
     if (item.id === 'wake' && isDone) {
       const sl = state.sleep[dateStr];
-      subInfo = `<div class="day-item-sub-info">${sl.waketime ? `🕐 ${sl.waketime}` : ''} ${sl.quality ? `· ${sl.quality}` : ''}</div>`;
+      const hoursStr = sl.hours ? ` · ${sl.hours}h slept` : '';
+      subInfo = `<div class="day-item-sub-info">${sl.waketime ? `🕐 ${sl.waketime}` : ''}${hoursStr}${sl.quality ? ` · ${sl.quality}` : ''}</div>`;
     } else if (item.id === 'lights' && isDone) {
       const sl = state.sleep[dateStr];
-      const hoursStr = sl.hours ? ` · ${sl.hours}h sleep` : '';
-      subInfo = `<div class="day-item-sub-info">${sl.bedtime ? `🌙 ${sl.bedtime}` : ''}${hoursStr}${sl.favPart ? `<div class="day-item-favpart">"${escHtml(sl.favPart)}"</div>` : ''}</div>`;
+      subInfo = `<div class="day-item-sub-info">${sl.bedtime ? `🌙 ${sl.bedtime}` : ''}${sl.favPart ? `<div class="day-item-favpart">"${escHtml(sl.favPart)}"</div>` : ''}</div>`;
     }
 
     html += `
@@ -1584,7 +1584,10 @@ function attachEvents() {
     if (!state.sleep[dateStr]) state.sleep[dateStr] = {};
     state.sleep[dateStr].waketime = waketime;
     state.sleep[dateStr].quality = quality;
-    const hours = calcSleepHours(state.sleep[dateStr].bedtime, waketime);
+    // Hours = previous night's bedtime → this morning's wake time
+    const prevDay = addDays(dateStr, -1);
+    const prevBedtime = state.sleep[prevDay]?.bedtime;
+    const hours = calcSleepHours(prevBedtime, waketime);
     if (hours) state.sleep[dateStr].hours = hours;
     persist();
     const cb = wakePending.cb;
@@ -1604,8 +1607,7 @@ function attachEvents() {
     if (!state.sleep[dateStr]) state.sleep[dateStr] = {};
     state.sleep[dateStr].bedtime = bedtime;
     if (favPart) state.sleep[dateStr].favPart = favPart;
-    const hours = calcSleepHours(bedtime, state.sleep[dateStr].waketime);
-    if (hours) state.sleep[dateStr].hours = hours;
+    // No hours here — tomorrow's wake up will close the loop
     persist();
     const cb = lightsPending.cb;
     closeLightsModal();
