@@ -559,7 +559,6 @@ function renderChallengeTab() {
   const week = programWeek(today);
   const phase = currentPhase(today);
 
-  document.getElementById('phase-badge').textContent = `PHASE ${PHASES.indexOf(phase) + 1} · ${phase.name.toUpperCase()}`;
   document.getElementById('day-counter').innerHTML = `${Math.max(1, Math.min(day, PROGRAM_DAYS))} <span>/ ${PROGRAM_DAYS}</span>`;
   document.getElementById('day-label').textContent = `Week ${week} of ${WEEKS}`;
 
