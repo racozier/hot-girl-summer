@@ -692,11 +692,96 @@ function renderWeekDaySchedule(dateStr) {
   const el = document.getElementById('week-day-schedule');
   el.classList.remove('hidden');
   const d = strToDate(dateStr);
+  const dow = d.getDay();
+  const schedule = DAY_SCHEDULES[dow] || [];
+  const isDoubleDay = [1, 3, 5].includes(dow);
   const label = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }).toUpperCase();
-  el.innerHTML = `
-    <div class="week-sched-header">${label}</div>
-    <div id="week-sched-list"></div>`;
-  renderOldStyleSchedule(dateStr, document.getElementById('week-sched-list'));
+  const today = todayStr();
+  const isFuture = dateStr > today;
+
+  let html = `
+    <div class="week-sched-header" style="display:flex;align-items:center;justify-content:space-between;padding-right:12px">
+      <span>${label}</span>
+      ${isDoubleDay ? '<span class="day-tag" style="font-size:9px;padding:3px 7px">DOUBLE DAY</span>' : ''}
+    </div>`;
+
+  if (!schedule.length) {
+    html += `<div class="sched-rest">😌 Rest day — you've earned it!</div>`;
+    el.innerHTML = html;
+    return;
+  }
+
+  schedule.forEach(item => {
+    const isDone = item.type === 'workout'
+      ? isWorkoutComplete(dateStr, item.wid)
+      : !!(state.dailyChecks[dateStr]?.[item.id]);
+    const cfNotes = item.type === 'workout' && item.cat === 'cf'
+      ? (state.workouts[dateStr]?.[item.wid]?.notes || '')
+      : '';
+    const dotClass = item.type === 'workout' ? item.cat : 'routine';
+
+    html += `
+      <div class="day-sched-item ${isDone ? 'done-item' : ''} ${isFuture ? 'future-sched-item' : ''}"
+           data-id="${item.id}" data-type="${item.type}" data-cat="${item.cat || ''}" data-wid="${item.wid || ''}">
+        <div class="day-item-time">${item.time}</div>
+        <div class="day-item-dot ${dotClass}"></div>
+        <div class="day-item-content">
+          <div class="day-item-label ${isDone ? 'done-strike' : ''}">${item.label}</div>
+          <div class="day-item-notes">${item.notes}</div>
+          ${cfNotes ? `<div class="day-item-cf-notes">"${escHtml(cfNotes)}"</div>` : ''}
+        </div>
+        <div class="day-item-check ${isDone ? 'checked' : ''} ${item.type === 'workout' ? item.cat : ''}"></div>
+      </div>`;
+  });
+
+  el.innerHTML = html;
+
+  if (!isFuture) {
+    el.querySelectorAll('.day-sched-item').forEach(itemEl => {
+      itemEl.addEventListener('click', () => {
+        const id   = itemEl.dataset.id;
+        const type = itemEl.dataset.type;
+        const cat  = itemEl.dataset.cat;
+        const wid  = itemEl.dataset.wid;
+        const schedItem = schedule.find(s => s.id === id);
+
+        if (type === 'workout') {
+          if (isWorkoutComplete(dateStr, wid)) {
+            unlogWorkout(dateStr, wid);
+            renderWeekDaySchedule(dateStr);
+            renderWeekViewInChallenge();
+            if (dateStr === todayStr()) renderDayViewInChallenge();
+            renderTrackerTab();
+            document.getElementById('streak-count').textContent = getCurrentStreak();
+          } else if (cat === 'cf') {
+            openCfModal(wid, schedItem.label, dateStr, () => {
+              renderWeekDaySchedule(dateStr);
+              renderWeekViewInChallenge();
+              if (dateStr === todayStr()) renderDayViewInChallenge();
+              renderTrackerTab();
+              document.getElementById('streak-count').textContent = getCurrentStreak();
+            });
+          } else {
+            logWorkout(dateStr, wid);
+            renderWeekDaySchedule(dateStr);
+            renderWeekViewInChallenge();
+            if (dateStr === todayStr()) renderDayViewInChallenge();
+            renderTrackerTab();
+            document.getElementById('streak-count').textContent = getCurrentStreak();
+          }
+        } else {
+          if (!state.dailyChecks[dateStr]) state.dailyChecks[dateStr] = {};
+          if (state.dailyChecks[dateStr][id]) {
+            delete state.dailyChecks[dateStr][id];
+          } else {
+            state.dailyChecks[dateStr][id] = true;
+          }
+          persist();
+          renderWeekDaySchedule(dateStr);
+        }
+      });
+    });
+  }
 }
 
 // Compact checklist used in Week view day panel
@@ -1044,13 +1129,9 @@ function renderReadingTab() {
 function renderProgressTab() {
   const today = todayStr();
   const streak = getCurrentStreak();
-  const sessions = totalSessionsCompleted();
   const day = Math.max(1, Math.min(programDay(today), PROGRAM_DAYS));
   const phase = currentPhase(today);
   const phaseIdx = PHASES.indexOf(phase);
-  const week = programWeek(today);
-  const weekStart = getMonday(today);
-  const wPct = weeklyWorkoutPct(weekStart);
 
   document.getElementById('progress-stats-row').innerHTML = `
     <div class="stat-card">
@@ -1058,16 +1139,8 @@ function renderProgressTab() {
       <div class="stat-sub">🔥 Day Streak</div>
     </div>
     <div class="stat-card">
-      <div class="stat-val">${sessions}</div>
-      <div class="stat-sub">Total Sessions</div>
-    </div>
-    <div class="stat-card">
       <div class="stat-val">${day}</div>
       <div class="stat-sub">Day of ${PROGRAM_DAYS}</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-val">${wPct}%</div>
-      <div class="stat-sub">This Week</div>
     </div>`;
 
   const phaseStartDay = phaseIdx * 28 + 1;
@@ -1088,7 +1161,6 @@ function renderProgressTab() {
       <div class="recap-title"><span>Program Complete! 🏆</span></div>
       <div class="recap-sub">84 Days. You showed up.</div>
       <div class="recap-stats">
-        <div class="recap-stat"><div class="recap-stat-val">${sessions}</div><div class="recap-stat-lbl">Sessions</div></div>
         <div class="recap-stat"><div class="recap-stat-val">${streak}</div><div class="recap-stat-lbl">Best Streak</div></div>
         <div class="recap-stat"><div class="recap-stat-val">${state.books.filter(b => b.completed).length}</div><div class="recap-stat-lbl">Books Read</div></div>
       </div>`;
