@@ -43,41 +43,41 @@ const PHASES = [
 ];
 
 const QUOTES = [
-  "She remembered who she was and the game changed.",
-  "Protect your energy. You're building something rare.",
-  "Discipline is the bridge between goals and accomplishment.",
-  "You didn't come this far to only come this far.",
-  "Progress, not perfection.",
-  "The body achieves what the mind believes.",
-  "Every morning is a chance to get better.",
-  "She believed she could, so she did.",
-  "Your only limit is your mind.",
-  "Consistency over intensity. Show up every day.",
-  "Make yourself a priority.",
-  "Be the girl who decided to go for it.",
-  "The comeback is always stronger than the setback.",
-  "One day or day one. You decide.",
-  "The best project you'll ever work on is you.",
-  "Fall in love with taking care of yourself.",
-  "Don't stop when you're tired. Stop when you're done.",
-  "You are stronger than you think.",
-  "Nothing will work unless you do.",
-  "Rise up. Start fresh. See the bright opportunity in each new day.",
-  "She is clothed in strength and dignity.",
-  "Dream big. Work hard. Stay focused.",
-  "She turned her can'ts into cans and her dreams into plans.",
-  "Invest in yourself. It pays the best interest.",
-  "Strong women don't have attitudes. We have standards.",
-  "Be a girl with a mind, a woman with attitude, and a lady with class.",
-  "Make your body your best outfit.",
-  "Good things come to those who sweat.",
-  "The secret of getting ahead is getting started.",
-  "Success is liking yourself, liking what you do, and liking how you do it.",
-  "Your health is your wealth.",
-  "Sweat, smile, repeat.",
-  "Hot girl summer is a mindset.",
-  "You are your own competition.",
-  "She is not afraid of hard work. She is afraid of a life unlived."
+  { q: "She remembered who she was and the game changed." },
+  { q: "Protect your energy. You're building something rare." },
+  { q: "Discipline is the bridge between goals and accomplishment.", a: "Jim Rohn" },
+  { q: "You didn't come this far to only come this far." },
+  { q: "Progress, not perfection." },
+  { q: "The body achieves what the mind believes." },
+  { q: "Every morning is a chance to get better." },
+  { q: "She believed she could, so she did." },
+  { q: "Your only limit is your mind." },
+  { q: "Consistency over intensity. Show up every day." },
+  { q: "Make yourself a priority." },
+  { q: "Be the girl who decided to go for it." },
+  { q: "The comeback is always stronger than the setback." },
+  { q: "One day or day one. You decide." },
+  { q: "The best project you'll ever work on is you." },
+  { q: "Fall in love with taking care of yourself." },
+  { q: "Don't stop when you're tired. Stop when you're done." },
+  { q: "You are stronger than you think." },
+  { q: "Nothing will work unless you do.", a: "Maya Angelou" },
+  { q: "Rise up. Start fresh. See the bright opportunity in each new day." },
+  { q: "She is clothed in strength and dignity." },
+  { q: "Dream big. Work hard. Stay focused." },
+  { q: "She turned her can'ts into cans and her dreams into plans." },
+  { q: "Invest in yourself. It pays the best interest.", a: "Benjamin Franklin" },
+  { q: "Strong women don't have attitudes. We have standards." },
+  { q: "Be a girl with a mind, a woman with attitude, and a lady with class." },
+  { q: "Make your body your best outfit." },
+  { q: "Good things come to those who sweat." },
+  { q: "The secret of getting ahead is getting started.", a: "Mark Twain" },
+  { q: "Success is liking yourself, liking what you do, and liking how you do it.", a: "Maya Angelou" },
+  { q: "Your health is your wealth." },
+  { q: "Sweat, smile, repeat." },
+  { q: "Hot girl summer is a mindset." },
+  { q: "You are your own competition." },
+  { q: "She is not afraid of hard work. She is afraid of a life unlived." }
 ];
 
 function getDailyQuote(dateStr) {
@@ -519,7 +519,7 @@ function checkAndFireNotifications() {
 
   if (timeInMins >= 330 && timeInMins < 540) {
     const day = programDay(today);
-    const quote = getDailyQuote(today);
+    const quote = getDailyQuote(today).q;
     const dayLabel = day >= 1 && day <= PROGRAM_DAYS ? `Day ${day} of ${PROGRAM_DAYS}` : 'Your Challenge';
     fireNotification(`Good Morning Hot Girl! 🌅 ${dayLabel}`, quote, 'morning');
     save(KEY.NOTIF_DATE, today);
@@ -564,7 +564,9 @@ function renderChallengeTab() {
   const week = programWeek(today);
   const phase = currentPhase(today);
 
-  document.getElementById('daily-quote').textContent = getDailyQuote(today);
+  const dq = getDailyQuote(today);
+  document.getElementById('daily-quote').innerHTML =
+    `“${escHtml(dq.q)}”${dq.a ? `<span class="daily-quote-author">— ${escHtml(dq.a)}</span>` : ''}`;
   document.getElementById('day-counter').innerHTML = `${Math.max(1, Math.min(day, PROGRAM_DAYS))} <span>/ ${PROGRAM_DAYS}</span>`;
   document.getElementById('day-label').textContent = `Week ${week} of ${WEEKS}`;
 

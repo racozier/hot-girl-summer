@@ -159,6 +159,10 @@ input[type="date"], input[type="time"] { color-scheme: dark; }
   padding: 0 8px;
   min-height: 1.45em;
 }
+.daily-quote-author {
+  display: block; font-style: normal; font-size: 11px;
+  color: rgba(137,207,240,.6); margin-top: 4px;
+}
 .day-counter {
   font-size: 36px; font-weight: 800;
   line-height: 1;
