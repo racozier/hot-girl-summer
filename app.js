@@ -80,6 +80,11 @@ const QUOTES = [
   "She is not afraid of hard work. She is afraid of a life unlived."
 ];
 
+function getDailyQuote(dateStr) {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return QUOTES[(y * 365 + m * 31 + d) % QUOTES.length];
+}
+
 // ════════════════════════════════════════
 // STORAGE
 // ════════════════════════════════════════
@@ -514,7 +519,7 @@ function checkAndFireNotifications() {
 
   if (timeInMins >= 330 && timeInMins < 540) {
     const day = programDay(today);
-    const quote = QUOTES[Math.floor(Math.random() * QUOTES.length)];
+    const quote = getDailyQuote(today);
     const dayLabel = day >= 1 && day <= PROGRAM_DAYS ? `Day ${day} of ${PROGRAM_DAYS}` : 'Your Challenge';
     fireNotification(`Good Morning Hot Girl! 🌅 ${dayLabel}`, quote, 'morning');
     save(KEY.NOTIF_DATE, today);
@@ -559,6 +564,7 @@ function renderChallengeTab() {
   const week = programWeek(today);
   const phase = currentPhase(today);
 
+  document.getElementById('daily-quote').textContent = getDailyQuote(today);
   document.getElementById('day-counter').innerHTML = `${Math.max(1, Math.min(day, PROGRAM_DAYS))} <span>/ ${PROGRAM_DAYS}</span>`;
   document.getElementById('day-label').textContent = `Week ${week} of ${WEEKS}`;
 
