@@ -938,6 +938,7 @@ input[type="date"], input[type="time"] { color-scheme: dark; }
 .day-sched-item:last-child { border-bottom: none; }
 .day-sched-item:active { background: rgba(255,255,255,.03); }
 .day-sched-item.done-item { opacity: .38; }
+.day-sched-item.future-sched-item { opacity: .5; cursor: default; pointer-events: none; }
 .day-item-time {
   font-size: 10px; color: var(--text-3); min-width: 52px;
   text-align: right; flex-shrink: 0; padding-top: 3px; font-weight: 600;
