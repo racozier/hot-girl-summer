@@ -173,7 +173,7 @@ const DAY_SCHEDULES = {
   6: [ // Saturday — Walk with friend
     { id: 'wake',    time: '6:30 AM',  label: 'Wake up',          notes: 'Ease in. Slower morning — you earned it.', type: 'routine' },
     { id: 'walk',    time: '10:00 AM', label: '6-Mile Walk',      notes: 'With a friend. Steady pace. Good conversation.', type: 'workout', cat: 'other', wid: 'walk' },
-    { id: 'brunch',  time: '12:00 PM', label: 'Enjoy the day :)', notes: 'Your time. Do what feels good.', type: 'routine' },
+    { id: 'brunch',  time: '12:00 PM', label: 'Enjoy the day 🙂', notes: 'Your time. Do what feels good.', type: 'routine' },
     { id: 'reading', time: '8:30 PM',  label: 'Reading',          notes: '30 min. Physical book only.', type: 'routine' },
     { id: 'lights',  time: '9:00 PM',  label: 'Lights out',       notes: 'Good recovery sleep tonight.', type: 'routine' },
   ],
