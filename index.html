@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#080808">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Hot Girl Summer">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <title>Hot Girl Summer</title>
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+<!-- ═══ ONBOARDING ═══ -->
+<div id="onboarding">
+  <div class="onboard-icon">☀️</div>
+  <h1 class="onboard-title">Hot Girl<br><span>Summer</span></h1>
+  <p class="onboard-sub">Your 12-week wellness journey starts here.<br>Let's build the best version of you.</p>
+  <div class="onboard-form">
+    <div class="onboard-field">
+      <label class="onboard-label">Challenge Start Date</label>
+      <input type="date" id="onboard-date" class="onboard-input">
+    </div>
+    <div class="notif-toggle" id="notif-toggle-row">
+      <span>🔔 Daily Motivational Alerts</span>
+      <div class="toggle-switch on" id="notif-switch"></div>
+    </div>
+    <button class="onboard-btn" id="onboard-submit">Let's Go ✨</button>
+  </div>
+</div>
+
+<!-- ═══ APP SHELL ═══ -->
+<div id="app" class="hidden">
+
+  <!-- Header -->
+  <header id="app-header">
+    <button id="menu-btn" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+    <h1 id="page-title">HOT GIRL SUMMER</h1>
+    <div id="streak-badge">
+      <span class="flame">🔥</span>
+      <div>
+        <span class="streak-count" id="streak-count">0</span>
+        <span class="streak-label">streak</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Tab Contents -->
+  <main id="main-content">
+
+    <!-- ── CHALLENGE TAB ── -->
+    <section id="tab-challenge" class="tab-content active">
+
+      <div class="challenge-header">
+        <div class="phase-badge" id="phase-badge">PHASE 1 · FOUNDATION</div>
+        <div class="day-counter" id="day-counter">1 <span>/ 84</span></div>
+        <div class="day-label" id="day-label">Day 1</div>
+      </div>
+
+      <!-- View Toggle -->
+      <div class="view-toggle">
+        <button class="view-btn active" data-view="day" id="btn-day-view">Today</button>
+        <button class="view-btn" data-view="week" id="btn-week-view">Week</button>
+      </div>
+
+      <!-- Day View -->
+      <div id="day-view">
+        <div class="today-workouts">
+          <div class="section-label" id="today-date-label">MONDAY · MAY 26</div>
+          <div class="today-workout-grid" id="today-workout-grid">
+            <!-- populated by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Week View -->
+      <div id="week-view" class="hidden week-view-container">
+        <div class="week-nav">
+          <button class="week-nav-btn" id="prev-week-btn">‹</button>
+          <span class="week-nav-title" id="week-nav-title">WEEK 1 OF 12</span>
+          <button class="week-nav-btn" id="next-week-btn">›</button>
+        </div>
+        <div class="week-grid-header" id="week-grid-header">
+          <span>M</span><span>T</span><span>W</span><span>TH</span><span>F</span><span>S</span><span>S</span>
+        </div>
+        <div class="week-grid-row" id="week-grid-row">
+          <!-- populated by JS -->
+        </div>
+      </div>
+
+      <!-- This Week Breakdown -->
+      <div class="section-label" style="margin-top:8px">THIS WEEK'S BREAKDOWN</div>
+      <div class="breakdown-row" id="breakdown-row">
+        <!-- populated by JS -->
+      </div>
+
+    </section>
+
+    <!-- ── TRACKER TAB ── -->
+    <section id="tab-tracker" class="tab-content">
+
+      <!-- Week Strip -->
+      <div class="week-strip" id="tracker-week-strip">
+        <!-- populated by JS -->
+      </div>
+
+      <!-- Workout Section -->
+      <div class="section-block">
+        <div class="section-block-title">WORKOUTS</div>
+        <div id="tracker-workout-list">
+          <!-- populated by JS -->
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Sleep Log -->
+      <div class="section-block">
+        <div class="section-block-title">SLEEP LOG</div>
+        <div class="sleep-log">
+          <div class="quality-row">
+            <button class="quality-btn great" data-quality="Great">😴 Great</button>
+            <button class="quality-btn ok"    data-quality="OK">😐 OK</button>
+            <button class="quality-btn poor"  data-quality="Poor">😫 Poor</button>
+          </div>
+          <div class="time-pickers">
+            <div class="time-field">
+              <label>Bedtime</label>
+              <input type="time" id="sleep-bedtime" value="21:00">
+            </div>
+            <div class="time-field">
+              <label>Wake Time</label>
+              <input type="time" id="sleep-waketime" value="05:30">
+            </div>
+          </div>
+          <div class="sleep-hours-display">
+            <span class="sleep-hours-label">Total Sleep</span>
+            <span class="sleep-hours-value" id="sleep-hours-display">—</span>
+          </div>
+          <button class="save-btn" id="save-sleep-btn">Save Sleep Log</button>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Weekly Snapshot -->
+      <div class="section-block">
+        <div class="section-block-title">THIS WEEK'S SNAPSHOT</div>
+        <div class="snapshot-row">
+          <div class="snapshot-card">
+            <div class="snapshot-pct" id="snap-workout-pct">—%</div>
+            <div class="snapshot-lbl">Workout<br>Completion</div>
+          </div>
+          <div class="snapshot-card">
+            <div class="snapshot-pct yoga-pct" id="snap-sleep-pct">—%</div>
+            <div class="snapshot-lbl">Sleep<br>Consistency</div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ── READING TAB ── -->
+    <section id="tab-reading" class="tab-content">
+      <div class="reading-header">
+        <h2 class="reading-title">Reading 📚</h2>
+        <p class="reading-subtitle" id="reading-count">0 books in your list</p>
+      </div>
+      <button class="add-book-btn" id="add-book-btn">
+        <span style="font-size:18px">+</span> Add a Book
+      </button>
+      <div class="book-list" id="book-list">
+        <!-- populated by JS -->
+      </div>
+    </section>
+
+    <!-- ── PROGRESS TAB ── -->
+    <section id="tab-progress" class="tab-content">
+
+      <!-- Stats Row -->
+      <div class="progress-stats-row" id="progress-stats-row">
+        <!-- populated by JS -->
+      </div>
+
+      <!-- Phase Progress -->
+      <div class="phase-progress" id="phase-progress-section">
+        <!-- populated by JS -->
+      </div>
+
+      <!-- Legend -->
+      <div class="legend-row">
+        <div class="legend-item"><div class="legend-dot cf"></div> CrossFit</div>
+        <div class="legend-item"><div class="legend-dot yoga"></div> Hot Yoga</div>
+        <div class="legend-item"><div class="legend-dot other"></div> Other</div>
+      </div>
+
+      <!-- 12 Week Grid -->
+      <div class="challenge-grid-section" id="challenge-grid-section">
+        <div class="section-label" style="padding:0;margin-bottom:10px">12-WEEK CHALLENGE</div>
+        <div class="grid-header-row">
+          <span></span>
+          <span>M</span><span>T</span><span>W</span><span>TH</span><span>F</span><span>S</span><span>S</span>
+        </div>
+        <div id="challenge-grid">
+          <!-- populated by JS -->
+        </div>
+      </div>
+
+      <!-- Sunday Reflection -->
+      <div id="reflection-section" class="hidden">
+        <div class="reflection-card">
+          <h3>✨ Sunday Reflection</h3>
+          <p>How was your week? What wins are you proud of?</p>
+          <textarea class="reflection-textarea" id="reflection-text" placeholder="Write your thoughts here..."></textarea>
+          <button class="save-btn" id="save-reflection-btn" style="margin-top:12px">Save Reflection</button>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Bottom Nav -->
+  <nav id="bottom-nav">
+    <button class="nav-btn active" data-tab="challenge">
+      <span class="nav-icon">◉</span>
+      <span>Challenge</span>
+    </button>
+    <button class="nav-btn" data-tab="tracker">
+      <span class="nav-icon">⚡</span>
+      <span>Tracker</span>
+    </button>
+    <button class="nav-btn" data-tab="reading">
+      <span class="nav-icon">📖</span>
+      <span>Reading</span>
+    </button>
+    <button class="nav-btn" data-tab="progress">
+      <span class="nav-icon">📊</span>
+      <span>Progress</span>
+    </button>
+  </nav>
+
+</div><!-- /#app -->
+
+<!-- ═══ FEEL RATING MODAL ═══ -->
+<div class="modal-overlay" id="feel-modal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="feel-modal-title">How did it feel?</div>
+    <div class="modal-subtitle" id="feel-modal-sub"></div>
+    <div class="feel-options">
+      <div class="feel-option" data-feel="🔥">
+        <span class="feel-emoji-big">🔥</span>
+        <div class="feel-label">On Fire</div>
+      </div>
+      <div class="feel-option" data-feel="💪">
+        <span class="feel-emoji-big">💪</span>
+        <div class="feel-label">Strong</div>
+      </div>
+      <div class="feel-option" data-feel="😴">
+        <span class="feel-emoji-big">😴</span>
+        <div class="feel-label">Showed Up</div>
+      </div>
+    </div>
+    <button class="modal-confirm-btn" id="feel-confirm-btn">Log It</button>
+  </div>
+</div>
+
+<!-- ═══ ADD BOOK MODAL ═══ -->
+<div class="modal-overlay" id="book-modal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="book-modal-title">Add a Book</div>
+    <div class="form-group">
+      <label class="form-label">Title</label>
+      <input type="text" id="book-title-input" class="form-input" placeholder="Book title...">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Start Date</label>
+      <input type="date" id="book-start-input" class="form-input">
+    </div>
+    <button class="modal-confirm-btn" id="book-save-btn">Add to Reading List</button>
+  </div>
+</div>
+
+<!-- ═══ FINISH BOOK MODAL ═══ -->
+<div class="modal-overlay" id="finish-book-modal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Mark as Complete 💪</div>
+    <div class="modal-subtitle" id="finish-book-name"></div>
+    <div class="form-group">
+      <label class="form-label">Finish Date</label>
+      <input type="date" id="book-finish-input" class="form-input">
+    </div>
+    <button class="modal-confirm-btn" id="book-finish-btn">Complete!</button>
+  </div>
+</div>
+
+<!-- ═══ SETTINGS ═══ -->
+<div class="settings-overlay" id="settings-overlay">
+  <div class="settings-panel">
+    <h2>Settings ⚙️</h2>
+    <div class="settings-item">
+      <label>Challenge Start Date</label>
+      <input type="date" id="settings-start-date">
+      <button class="settings-btn" id="settings-save-date" style="margin-top:8px">Update Date</button>
+    </div>
+    <div class="settings-item">
+      <label>Notifications</label>
+      <div class="notif-toggle" id="settings-notif-toggle" style="background:transparent;padding:0">
+        <span>Daily Motivational</span>
+        <div class="toggle-switch" id="settings-notif-switch"></div>
+      </div>
+    </div>
+    <div class="settings-item">
+      <button class="settings-btn danger" id="reset-btn">Reset All Data</button>
+    </div>
+  </div>
+  <div style="flex:1" id="settings-close-area"></div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
