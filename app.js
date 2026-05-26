@@ -94,7 +94,8 @@ const KEY = {
   ONBOARDED:    'hgs_onboarded',
   NOTIF:        'hgs_notif',
   NOTIF_DATE:   'hgs_notif_date',
-  DAILY_CHECKS: 'hgs_daily_checks'
+  DAILY_CHECKS: 'hgs_daily_checks',
+  DAY_NOTES:    'hgs_day_notes'
 };
 
 function load(key, fallback) {
@@ -120,70 +121,67 @@ const DEFAULT_BOOKS = [
 ];
 
 const DAY_SCHEDULES = {
-  1: [ // Monday — CF + Yoga (DOUBLE DAY)
+  1: [ // Monday — CF + Hot Yoga
     { id: 'wake',    time: '5:30 AM', label: 'Wake up',        notes: 'Hydrate immediately. Electrolytes if keto phase.', type: 'routine' },
     { id: 'cf',      time: '6:00 AM', label: 'CrossFit',       notes: 'Strength/WOD class. This is your anchor — go hard.', type: 'workout', cat: 'cf', wid: 'cf' },
     { id: 'shower',  time: '7:00 AM', label: 'Home + Shower',  notes: 'Quick reset. High protein breakfast.', type: 'routine' },
     { id: 'work',    time: '7:30 AM', label: 'Commute + Work', notes: '8:30–4:30 work day.', type: 'routine' },
-    { id: 'yoga',    time: '5:30 PM', label: 'Hot Yoga',       notes: 'Evening class. Recovery — let your body decompress.', type: 'workout', cat: 'yoga', wid: 'yoga' },
-    { id: 'dinner',  time: '7:00 PM', label: 'Dinner',         notes: 'Keto or plant-based depending on phase. Prep ahead.', type: 'routine' },
+    { id: 'yoga',    time: '6:00 PM', label: 'Hot Yoga',       notes: 'Evening class. Recovery — let your body decompress.', type: 'workout', cat: 'yoga', wid: 'yoga' },
+    { id: 'dinner',  time: '7:30 PM', label: 'Dinner',         notes: 'Keto or plant-based depending on phase. Prep ahead.', type: 'routine' },
     { id: 'reading', time: '8:30 PM', label: 'Reading',        notes: '30 min. Physical book only.', type: 'routine' },
     { id: 'lights',  time: '9:00 PM', label: 'Lights out',     notes: '5:30 AM wake = 8.5 hrs.', type: 'routine' },
   ],
-  2: [ // Tuesday — Yoga AM + Dance
-    { id: 'wake',    time: '5:30 AM', label: 'Wake up',        notes: 'Hydrate immediately.', type: 'routine' },
-    { id: 'yoga_am', time: '6:00 AM', label: 'Yoga AM',        notes: 'Morning practice. Breathe deep, set your intention.', type: 'workout', cat: 'yoga', wid: 'yoga_am' },
-    { id: 'shower',  time: '7:00 AM', label: 'Home + Shower',  notes: 'Quick reset. High protein breakfast.', type: 'routine' },
-    { id: 'work',    time: '7:30 AM', label: 'Commute + Work', notes: '8:30–4:30 work day.', type: 'routine' },
-    { id: 'dance',   time: '5:30 PM', label: 'Dance',          notes: 'Have fun. This is joy as movement — energy up.', type: 'workout', cat: 'other', wid: 'dance' },
-    { id: 'dinner',  time: '7:00 PM', label: 'Dinner',         notes: 'Keto or plant-based depending on phase.', type: 'routine' },
-    { id: 'reading', time: '8:30 PM', label: 'Reading',        notes: '30 min. Physical book only.', type: 'routine' },
-    { id: 'lights',  time: '9:00 PM', label: 'Lights out',     notes: '5:30 AM wake = 8.5 hrs.', type: 'routine' },
+  2: [ // Tuesday — Yoga AM + Speed Puzzles
+    { id: 'wake',    time: '5:30 AM', label: 'Wake up',          notes: 'Hydrate immediately.', type: 'routine' },
+    { id: 'yoga_am', time: '5:45 AM', label: 'Yoga AM',          notes: 'Morning practice. Breathe deep, set your intention.', type: 'workout', cat: 'yoga', wid: 'yoga_am' },
+    { id: 'shower',  time: '7:00 AM', label: 'Home + Shower',    notes: 'Quick reset. High protein breakfast.', type: 'routine' },
+    { id: 'work',    time: '7:30 AM', label: 'Commute + Work',   notes: '8:30–4:30 work day.', type: 'routine' },
+    { id: 'puzzles', time: '6:00 PM', label: 'Speed Puzzles 🍺', notes: 'Brewery with friends. 6–9 PM. Recharge socially.', type: 'routine' },
+    { id: 'lights',  time: '9:30 PM', label: 'Lights out',       notes: 'A little later tonight — that\'s okay.', type: 'routine' },
   ],
-  3: [ // Wednesday — CF + Yoga (DOUBLE DAY)
-    { id: 'wake',    time: '5:30 AM', label: 'Wake up',        notes: 'Hydrate immediately. Electrolytes if keto phase.', type: 'routine' },
-    { id: 'cf',      time: '6:00 AM', label: 'CrossFit',       notes: 'Strength/WOD class. Push harder than last week.', type: 'workout', cat: 'cf', wid: 'cf' },
-    { id: 'shower',  time: '7:00 AM', label: 'Home + Shower',  notes: 'Quick reset. High protein breakfast.', type: 'routine' },
-    { id: 'work',    time: '7:30 AM', label: 'Commute + Work', notes: '8:30–4:30 work day.', type: 'routine' },
-    { id: 'yoga',    time: '5:30 PM', label: 'Hot Yoga',       notes: 'Evening class. Recovery — let your body decompress.', type: 'workout', cat: 'yoga', wid: 'yoga' },
-    { id: 'dinner',  time: '7:00 PM', label: 'Dinner',         notes: 'Keto or plant-based depending on phase.', type: 'routine' },
-    { id: 'reading', time: '8:30 PM', label: 'Reading',        notes: '30 min. Physical book only.', type: 'routine' },
-    { id: 'lights',  time: '9:00 PM', label: 'Lights out',     notes: '5:30 AM wake = 8.5 hrs.', type: 'routine' },
+  3: [ // Wednesday — CF + Hot Yoga + Trivia
+    { id: 'wake',    time: '5:30 AM', label: 'Wake up',         notes: 'Hydrate immediately. Electrolytes if keto phase.', type: 'routine' },
+    { id: 'cf',      time: '6:00 AM', label: 'CrossFit',        notes: 'Strength/WOD class. Push harder than last week.', type: 'workout', cat: 'cf', wid: 'cf' },
+    { id: 'shower',  time: '7:00 AM', label: 'Home + Shower',   notes: 'Quick reset. High protein breakfast.', type: 'routine' },
+    { id: 'work',    time: '7:30 AM', label: 'Commute + Work',  notes: '8:30–4:30 work day.', type: 'routine' },
+    { id: 'yoga',    time: '6:00 PM', label: 'Hot Yoga',        notes: 'Evening class. Recovery — let your body decompress.', type: 'workout', cat: 'yoga', wid: 'yoga' },
+    { id: 'trivia',  time: '7:00 PM', label: 'Trivia 🍺',       notes: 'Brewery with friends. 7–9 PM. Go get those points!', type: 'routine' },
+    { id: 'lights',  time: '9:30 PM', label: 'Lights out',      notes: 'Later night — you\'ve earned it.', type: 'routine' },
   ],
-  4: [ // Thursday — Yoga AM + Bootcamp
-    { id: 'wake',     time: '5:30 AM', label: 'Wake up',        notes: 'Hydrate immediately.', type: 'routine' },
-    { id: 'yoga_am',  time: '6:00 AM', label: 'Yoga AM',        notes: 'Ground yourself before the day.', type: 'workout', cat: 'yoga', wid: 'yoga_am' },
-    { id: 'shower',   time: '7:00 AM', label: 'Home + Shower',  notes: 'Quick reset. High protein breakfast.', type: 'routine' },
-    { id: 'work',     time: '7:30 AM', label: 'Commute + Work', notes: '8:30–4:30 work day.', type: 'routine' },
-    { id: 'bootcamp', time: '5:30 PM', label: 'Bootcamp',       notes: 'High intensity. Leave it all on the floor.', type: 'workout', cat: 'other', wid: 'bootcamp' },
-    { id: 'dinner',   time: '7:00 PM', label: 'Dinner',         notes: 'Keto or plant-based depending on phase.', type: 'routine' },
-    { id: 'reading',  time: '8:30 PM', label: 'Reading',        notes: '30 min. Physical book only.', type: 'routine' },
-    { id: 'lights',   time: '9:00 PM', label: 'Lights out',     notes: '5:30 AM wake = 8.5 hrs.', type: 'routine' },
+  4: [ // Thursday — Yoga AM + Bootcamp + Volunteer
+    { id: 'wake',      time: '5:30 AM', label: 'Wake up',          notes: 'Hydrate immediately.', type: 'routine' },
+    { id: 'yoga_am',   time: '5:45 AM', label: 'Yoga AM',          notes: 'Ground yourself before the day.', type: 'workout', cat: 'yoga', wid: 'yoga_am' },
+    { id: 'shower',    time: '7:00 AM', label: 'Home + Shower',    notes: 'Quick reset. High protein breakfast.', type: 'routine' },
+    { id: 'work',      time: '7:30 AM', label: 'Commute + Work',   notes: '8:30–4:30 work day.', type: 'routine' },
+    { id: 'bootcamp',  time: '5:30 PM', label: 'Bootcamp',         notes: 'High intensity. Leave it all on the floor.', type: 'workout', cat: 'other', wid: 'bootcamp' },
+    { id: 'volunteer', time: '6:00 PM', label: 'Volunteer Call',   notes: '30 min. Give back.', type: 'routine' },
+    { id: 'dinner',    time: '7:00 PM', label: 'Dinner',           notes: 'Keto or plant-based depending on phase.', type: 'routine' },
+    { id: 'reading',   time: '8:30 PM', label: 'Reading',          notes: '30 min. Physical book only.', type: 'routine' },
+    { id: 'lights',    time: '9:00 PM', label: 'Lights out',       notes: '5:30 AM wake = 8.5 hrs.', type: 'routine' },
   ],
-  5: [ // Friday — CF + Yoga (DOUBLE DAY)
+  5: [ // Friday — CF + Hot Yoga
     { id: 'wake',    time: '5:30 AM', label: 'Wake up',        notes: 'Hydrate immediately. Electrolytes if keto phase.', type: 'routine' },
     { id: 'cf',      time: '6:00 AM', label: 'CrossFit',       notes: 'Friday strength. Finish the week strong.', type: 'workout', cat: 'cf', wid: 'cf' },
     { id: 'shower',  time: '7:00 AM', label: 'Home + Shower',  notes: 'Quick reset. High protein breakfast.', type: 'routine' },
     { id: 'work',    time: '7:30 AM', label: 'Commute + Work', notes: '8:30–4:30 work day.', type: 'routine' },
-    { id: 'yoga',    time: '5:30 PM', label: 'Hot Yoga',       notes: 'TGIF yoga. End the work week right.', type: 'workout', cat: 'yoga', wid: 'yoga' },
-    { id: 'dinner',  time: '7:00 PM', label: 'Dinner',         notes: 'Keto or plant-based depending on phase.', type: 'routine' },
+    { id: 'yoga',    time: '6:00 PM', label: 'Hot Yoga',       notes: 'TGIF yoga. End the work week right.', type: 'workout', cat: 'yoga', wid: 'yoga' },
+    { id: 'dinner',  time: '7:30 PM', label: 'Dinner',         notes: 'Keto or plant-based depending on phase.', type: 'routine' },
     { id: 'reading', time: '8:30 PM', label: 'Reading',        notes: '30 min. Physical book only.', type: 'routine' },
     { id: 'lights',  time: '9:00 PM', label: 'Lights out',     notes: '5:30 AM wake = 8.5 hrs.', type: 'routine' },
   ],
-  6: [ // Saturday — Walk
-    { id: 'wake',    time: '7:00 AM',  label: 'Wake up',       notes: 'Ease in. You earned a slower morning.', type: 'routine' },
-    { id: 'walk',    time: '8:00 AM',  label: '6-Mile Walk',   notes: 'Steady pace, no rush. Podcast or music. Fresh air.', type: 'workout', cat: 'other', wid: 'walk' },
-    { id: 'brunch',  time: '10:00 AM', label: 'Home + Brunch', notes: 'High protein. Refuel well.', type: 'routine' },
-    { id: 'prep',    time: '2:00 PM',  label: 'Meal Prep',     notes: 'Prep for the week ahead. Future you will thank you.', type: 'routine' },
-    { id: 'reading', time: '8:30 PM',  label: 'Reading',       notes: '30 min. Physical book only.', type: 'routine' },
-    { id: 'lights',  time: '9:00 PM',  label: 'Lights out',    notes: 'Good recovery sleep tonight.', type: 'routine' },
+  6: [ // Saturday — Walk with friend
+    { id: 'wake',    time: '6:30 AM',  label: 'Wake up',        notes: 'Ease in. Slower morning — you earned it.', type: 'routine' },
+    { id: 'walk',    time: '10:00 AM', label: '6-Mile Walk',    notes: 'With a friend. Steady pace. Good conversation.', type: 'workout', cat: 'other', wid: 'walk' },
+    { id: 'brunch',  time: '12:00 PM', label: 'Home + Brunch',  notes: 'High protein. Refuel well.', type: 'routine' },
+    { id: 'reading', time: '8:30 PM',  label: 'Reading',        notes: '30 min. Physical book only.', type: 'routine' },
+    { id: 'lights',  time: '9:00 PM',  label: 'Lights out',     notes: 'Good recovery sleep tonight.', type: 'routine' },
   ],
-  0: [ // Sunday — Yoga + Rest
-    { id: 'wake',    time: '7:00 AM',  label: 'Wake up',                 notes: 'Ease in. Journaling or quiet morning.', type: 'routine' },
-    { id: 'yoga',    time: '9:00 AM',  label: 'Yoga',                    notes: 'Slow flow. Restore and reflect.', type: 'workout', cat: 'yoga', wid: 'yoga' },
-    { id: 'prep',    time: '11:00 AM', label: 'Meal Prep + Reflection',  notes: 'Prep the week. Write your Sunday reflection.', type: 'routine' },
-    { id: 'reading', time: '8:30 PM',  label: 'Reading',                 notes: '30 min. Physical book only.', type: 'routine' },
-    { id: 'lights',  time: '9:00 PM',  label: 'Lights out',              notes: '5:30 AM wake = 8.5 hrs.', type: 'routine' },
+  0: [ // Sunday — Yoga + Meal Prep + Rest
+    { id: 'wake',    time: '6:30 AM',  label: 'Wake up',                notes: 'Ease in. Journaling or quiet morning.', type: 'routine' },
+    { id: 'yoga',    time: '9:00 AM',  label: 'Yoga',                   notes: 'Slow flow. Restore and reflect.', type: 'workout', cat: 'yoga', wid: 'yoga' },
+    { id: 'prep',    time: '11:00 AM', label: 'Meal Prep + Reflection', notes: 'Prep the whole week. Write your Sunday reflection.', type: 'routine' },
+    { id: 'reading', time: '8:30 PM',  label: 'Reading',                notes: '30 min. Physical book only.', type: 'routine' },
+    { id: 'lights',  time: '9:00 PM',  label: 'Lights out',             notes: '6:30 AM wake — solid 9.5 hrs available.', type: 'routine' },
   ],
 };
 
@@ -198,6 +196,7 @@ let state = {
   books: [],
   reflections: {},
   dailyChecks: {},
+  dayNotes: {},
   notifEnabled: false,
   currentTab: 'challenge',
   challengeView: 'day',
@@ -213,6 +212,7 @@ function loadState() {
   state.reflections           = load(KEY.REFLECTIONS, {});
   state.notifEnabled          = load(KEY.NOTIF, false);
   state.dailyChecks           = load(KEY.DAILY_CHECKS, {});
+  state.dayNotes              = load(KEY.DAY_NOTES, {});
   state.trackerSelectedDate   = todayStr();
   state.challengeSelectedDate = todayStr();
 
@@ -239,6 +239,7 @@ function persist() {
   save(KEY.BOOKS,        state.books);
   save(KEY.REFLECTIONS,  state.reflections);
   save(KEY.DAILY_CHECKS, state.dailyChecks);
+  save(KEY.DAY_NOTES,    state.dayNotes);
 }
 
 // ════════════════════════════════════════
@@ -562,7 +563,6 @@ function renderDayViewInChallenge() {
   const d = strToDate(dateStr);
   const dow = d.getDay();
   const schedule = DAY_SCHEDULES[dow] || [];
-  const isDoubleDay = [1, 3, 5].includes(dow);
 
   const dayName = d.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
   const dateFmt = d.toLocaleDateString('en-US', { month: 'long', day: 'numeric' }).toUpperCase();
@@ -576,7 +576,6 @@ function renderDayViewInChallenge() {
       <div class="day-name-display">${dayName}</div>
       <div class="day-date-display">${dateFmt}</div>
     </div>
-    ${isDoubleDay ? '<div class="day-tag">DOUBLE DAY</div>' : ''}
   </div>`;
 
   schedule.forEach(item => {
@@ -604,7 +603,25 @@ function renderDayViewInChallenge() {
       </div>`;
   });
 
+  // Day notes box
+  const savedNote = state.dayNotes[dateStr] || '';
+  html += `<div class="day-notes-wrap">
+    <div class="day-notes-label">Notes</div>
+    <textarea class="day-notes-input" id="day-notes-input" placeholder="How's your day going? Any wins, thoughts, reflections...">${escHtml(savedNote)}</textarea>
+  </div>`;
+
   grid.innerHTML = html;
+
+  // Auto-save notes on input
+  const notesEl = document.getElementById('day-notes-input');
+  let notesTimer;
+  notesEl.addEventListener('input', () => {
+    clearTimeout(notesTimer);
+    notesTimer = setTimeout(() => {
+      state.dayNotes[dateStr] = notesEl.value.trim();
+      persist();
+    }, 600);
+  });
 
   grid.querySelectorAll('.day-sched-item').forEach(el => {
     el.addEventListener('click', () => {
@@ -694,16 +711,11 @@ function renderWeekDaySchedule(dateStr) {
   const d = strToDate(dateStr);
   const dow = d.getDay();
   const schedule = DAY_SCHEDULES[dow] || [];
-  const isDoubleDay = [1, 3, 5].includes(dow);
   const label = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }).toUpperCase();
   const today = todayStr();
   const isFuture = dateStr > today;
 
-  let html = `
-    <div class="week-sched-header" style="display:flex;align-items:center;justify-content:space-between;padding-right:12px">
-      <span>${label}</span>
-      ${isDoubleDay ? '<span class="day-tag" style="font-size:9px;padding:3px 7px">DOUBLE DAY</span>' : ''}
-    </div>`;
+  let html = `<div class="week-sched-header">${label}</div>`;
 
   if (!schedule.length) {
     html += `<div class="sched-rest">😌 Rest day — you've earned it!</div>`;
