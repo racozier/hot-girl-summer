@@ -297,7 +297,11 @@ input[type="date"], input[type="time"] { color-scheme: dark; }
   flex-shrink: 0;
 }
 .w-circle.today-ring { box-shadow: 0 0 0 2.5px white; }
-.w-circle.future { opacity: .25; }
+.w-circle.future  { opacity: .25; }
+.w-circle.wk-complete { background: var(--green); }
+.w-circle.wk-today    { background: var(--yellow); }
+.w-circle.wk-missed   { background: var(--surface-3); opacity: .5; }
+.w-circle.rest        { background: var(--surface-3); opacity: .2; }
 .w-circle.cat-cf       { background: var(--cf); }
 .w-circle.cat-yoga     { background: var(--yoga); }
 .w-circle.cat-other    { background: var(--other); }

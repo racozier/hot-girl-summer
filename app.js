@@ -400,6 +400,18 @@ function circleClass(dateStr) {
   return 'triple';
 }
 
+function challengeWeekCircleClass(dateStr) {
+  const today = todayStr();
+  if (state.startDate && dateStr < state.startDate) return 'future';
+  if (dateStr > today) return 'future';
+  const sched = scheduleForDate(dateStr);
+  if (!sched.length) return 'rest';
+  if (dateStr === today) return 'wk-today';
+  const data = workoutDataForDate(dateStr);
+  const done = sched.some(w => data[w.id]?.done);
+  return done ? 'wk-complete' : 'wk-missed';
+}
+
 function getCurrentStreak() {
   if (!state.startDate) return 0;
   let streak = 0;
@@ -751,7 +763,7 @@ function renderWeekViewInChallenge() {
 
   const row = document.getElementById('week-grid-row');
   row.innerHTML = days.map(d => {
-    const cls = circleClass(d);
+    const cls = challengeWeekCircleClass(d);
     const isToday = d === today;
     const isSel = d === state.challengeSelectedDate;
     const dateNum = strToDate(d).getDate();
