@@ -587,24 +587,28 @@ function renderChallengeTab() {
 }
 
 function renderDayViewInChallenge() {
-  const dateStr = todayStr();
+  const today = todayStr();
+  const dateStr = state.challengeSelectedDate || today;
+  const isFuture = dateStr > today;
   const d = strToDate(dateStr);
   const dow = d.getDay();
   const schedule = DAY_SCHEDULES[dow] || [];
 
   const dayName = d.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
   const dateFmt = d.toLocaleDateString('en-US', { month: 'long', day: 'numeric' }).toUpperCase();
-
-  document.getElementById('today-date-label').textContent = `${dayName} · ${dateFmt}`;
+  const isToday = dateStr === today;
 
   const grid = document.getElementById('today-workout-grid');
 
-  let html = `<div class="day-header-row">
-    <div>
+  let html = `<div class="day-nav-row">
+    <button class="day-nav-btn" id="day-prev-btn">‹</button>
+    <div class="day-nav-center">
       <div class="day-name-display">${dayName}</div>
       <div class="day-date-display">${dateFmt}</div>
     </div>
-  </div>`;
+    <button class="day-nav-btn" id="day-next-btn">›</button>
+  </div>
+  ${!isToday ? `<button class="day-jump-today" id="day-jump-today">↩ Back to Today</button>` : ''}`;
 
   schedule.forEach(item => {
     let isDone;
@@ -635,7 +639,7 @@ function renderDayViewInChallenge() {
     }
 
     html += `
-      <div class="day-sched-item ${isDone ? 'done-item' : ''}"
+      <div class="day-sched-item ${isDone ? 'done-item' : ''} ${isFuture ? 'future-sched-item' : ''}"
            data-id="${item.id}" data-type="${item.type}" data-cat="${item.cat || ''}" data-wid="${item.wid || ''}">
         <div class="day-item-time">${item.time}</div>
         <div class="day-item-dot ${dotClass}"></div>
@@ -649,7 +653,7 @@ function renderDayViewInChallenge() {
       </div>`;
   });
 
-  // Day notes (add-note list, like reading section)
+  // Day notes
   const dayNotesList = state.dayNotes[dateStr] || [];
   const notesHtml = dayNotesList.map((n, ni) => `
     <div class="day-note-item">
@@ -671,6 +675,21 @@ function renderDayViewInChallenge() {
   </div>`;
 
   grid.innerHTML = html;
+
+  document.getElementById('day-prev-btn').addEventListener('click', () => {
+    state.challengeSelectedDate = addDays(dateStr, -1);
+    renderDayViewInChallenge();
+  });
+  document.getElementById('day-next-btn').addEventListener('click', () => {
+    state.challengeSelectedDate = addDays(dateStr, 1);
+    renderDayViewInChallenge();
+  });
+  if (!isToday) {
+    document.getElementById('day-jump-today').addEventListener('click', () => {
+      state.challengeSelectedDate = today;
+      renderDayViewInChallenge();
+    });
+  }
 
   document.getElementById('add-day-note-btn').addEventListener('click', () => {
     const form = document.getElementById('day-note-form');
@@ -696,53 +715,56 @@ function renderDayViewInChallenge() {
     });
   });
 
-  grid.querySelectorAll('.day-sched-item').forEach(el => {
-    el.addEventListener('click', () => {
-      const id   = el.dataset.id;
-      const type = el.dataset.type;
-      const cat  = el.dataset.cat;
-      const wid  = el.dataset.wid;
+  if (!isFuture) {
+    grid.querySelectorAll('.day-sched-item').forEach(el => {
+      el.addEventListener('click', () => {
+        const id   = el.dataset.id;
+        const type = el.dataset.type;
+        const cat  = el.dataset.cat;
+        const wid  = el.dataset.wid;
 
-      if (type === 'workout') {
-        if (isWorkoutComplete(dateStr, wid)) {
-          unlogWorkout(dateStr, wid);
-          renderDayViewInChallenge();
-          renderTrackerTab();
-          document.getElementById('streak-count').textContent = getCurrentStreak();
-        } else if (cat === 'cf') {
-          const item = schedule.find(s => s.id === id);
-          openCfModal(wid, item.label, dateStr, () => {
+        if (type === 'workout') {
+          if (isWorkoutComplete(dateStr, wid)) {
+            unlogWorkout(dateStr, wid);
             renderDayViewInChallenge();
             renderTrackerTab();
             document.getElementById('streak-count').textContent = getCurrentStreak();
-          });
-        } else {
-          logWorkout(dateStr, wid);
-          renderDayViewInChallenge();
-          renderTrackerTab();
-          document.getElementById('streak-count').textContent = getCurrentStreak();
-        }
-      } else {
-        if (id === 'wake') {
-          const schedItem = schedule.find(s => s.id === 'wake');
-          openWakeModal(dateStr, schedItem, () => { renderDayViewInChallenge(); renderTrackerTab(); });
-        } else if (id === 'lights') {
-          const schedItem = schedule.find(s => s.id === 'lights');
-          openLightsModal(dateStr, schedItem, () => { renderDayViewInChallenge(); renderTrackerTab(); });
-        } else {
-          // Routine item — toggle in dailyChecks
-          if (!state.dailyChecks[dateStr]) state.dailyChecks[dateStr] = {};
-          if (state.dailyChecks[dateStr][id]) {
-            delete state.dailyChecks[dateStr][id];
+          } else if (cat === 'cf') {
+            const item = schedule.find(s => s.id === id);
+            openCfModal(wid, item.label, dateStr, () => {
+              renderDayViewInChallenge();
+              renderTrackerTab();
+              document.getElementById('streak-count').textContent = getCurrentStreak();
+            });
           } else {
-            state.dailyChecks[dateStr][id] = true;
+            logWorkout(dateStr, wid);
+            renderDayViewInChallenge();
+            renderTrackerTab();
+            document.getElementById('streak-count').textContent = getCurrentStreak();
           }
-          persist();
-          renderDayViewInChallenge();
+        } else {
+          if (id === 'wake') {
+            openWakeModal(dateStr, schedule.find(s => s.id === 'wake'), () => {
+              renderDayViewInChallenge(); renderTrackerTab();
+            });
+          } else if (id === 'lights') {
+            openLightsModal(dateStr, schedule.find(s => s.id === 'lights'), () => {
+              renderDayViewInChallenge(); renderTrackerTab();
+            });
+          } else {
+            if (!state.dailyChecks[dateStr]) state.dailyChecks[dateStr] = {};
+            if (state.dailyChecks[dateStr][id]) {
+              delete state.dailyChecks[dateStr][id];
+            } else {
+              state.dailyChecks[dateStr][id] = true;
+            }
+            persist();
+            renderDayViewInChallenge();
+          }
         }
-      }
+      });
     });
-  });
+  }
 }
 
 function renderWeekViewInChallenge() {
