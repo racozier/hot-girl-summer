@@ -857,6 +857,129 @@ input[type="date"], input[type="time"] { color-scheme: dark; }
 .toggle-switch.on::after { transform: translateX(18px); }
 
 /* ══════════════════════════════
+   SCHEDULE CHECKLIST (Challenge tab)
+══════════════════════════════ */
+.sched-block {
+  margin: 0 16px 16px;
+  background: var(--surface-2);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.sched-toggle-btn {
+  width: 100%;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px;
+  font-size: 11px; font-weight: 700;
+  letter-spacing: .1em; text-transform: uppercase;
+  color: var(--text-3);
+  border-bottom: 1px solid rgba(255,255,255,.05);
+}
+.sched-arrow { display: inline-block; transition: transform .25s; font-style: normal; }
+.sched-arrow.open { transform: rotate(180deg); }
+.sched-list-wrap {
+  max-height: 600px;
+  transition: max-height .3s ease;
+  overflow: hidden;
+}
+.sched-list-wrap.collapsed { max-height: 0; }
+.sched-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 16px;
+  border-top: 1px solid rgba(255,255,255,.04);
+  cursor: pointer;
+  transition: opacity .35s, background .15s;
+}
+.sched-item:active { background: rgba(255,255,255,.03); }
+.sched-item.sched-done { opacity: .4; pointer-events: auto; }
+.sched-item.sched-future { opacity: .35; cursor: default; pointer-events: none; }
+.sched-check {
+  width: 24px; height: 24px; flex-shrink: 0;
+  border-radius: 6px; border: 2px solid var(--surface-4);
+  display: flex; align-items: center; justify-content: center;
+  transition: .2s;
+}
+.sched-check.cf    { border-color: var(--cf); }
+.sched-check.yoga  { border-color: var(--yoga); }
+.sched-check.other { border-color: var(--other); }
+.sched-check.checked.cf    { background: var(--cf);    border-color: var(--cf); }
+.sched-check.checked.yoga  { background: var(--yoga);  border-color: var(--yoga); }
+.sched-check.checked.other { background: var(--other); border-color: var(--other); }
+.sched-check.checked::after { content: '✓'; font-size: 13px; font-weight: 800; color: white; }
+.sched-text { flex: 1; }
+.sched-name { font-size: 15px; font-weight: 600; display: block; }
+.sched-strike { text-decoration: line-through; }
+.sched-time { font-size: 11px; color: var(--text-3); display: block; margin-top: 2px; }
+.sched-feel { font-size: 20px; flex-shrink: 0; }
+.sched-rest {
+  padding: 20px 16px;
+  color: var(--text-2); font-size: 14px; text-align: center;
+}
+
+/* Week view — tapped day schedule */
+.week-day-schedule {
+  margin-top: 12px;
+  background: var(--surface-2);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.week-sched-header {
+  padding: 12px 16px;
+  font-size: 11px; font-weight: 700;
+  letter-spacing: .1em; text-transform: uppercase;
+  color: var(--text-3);
+  border-bottom: 1px solid rgba(255,255,255,.05);
+}
+.week-cell { cursor: pointer; }
+.week-cell.sel-day .w-circle { box-shadow: 0 0 0 2.5px var(--gold); }
+.week-cell.sel-day .week-cell-date { color: var(--gold); font-weight: 700; }
+
+/* ══════════════════════════════
+   BOOK NOTES
+══════════════════════════════ */
+.book-notes-section { margin-top: 10px; }
+.book-notes-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 6px;
+}
+.book-notes-label { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); }
+.add-note-btn {
+  font-size: 12px; font-weight: 700;
+  color: var(--yoga); padding: 2px 0;
+  transition: opacity .15s;
+}
+.book-note {
+  background: var(--surface-3);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px; margin-bottom: 6px;
+  position: relative;
+}
+.note-text { font-size: 13px; color: var(--text-2); line-height: 1.5; white-space: pre-wrap; }
+.note-meta { font-size: 10px; color: var(--text-3); margin-top: 4px; text-transform: uppercase; letter-spacing: .05em; }
+.delete-note-btn {
+  position: absolute; top: 8px; right: 8px;
+  font-size: 12px; color: var(--text-3); padding: 2px 4px;
+}
+.note-form { margin-top: 8px; }
+.note-form.hidden { display: none; }
+.note-input {
+  width: 100%;
+  background: var(--surface-3);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px; color: var(--text);
+  font-size: 13px; resize: none; min-height: 72px; outline: none;
+  transition: border-color .2s;
+}
+.note-input:focus { border-color: rgba(124,58,237,.4); }
+.save-note-btn {
+  margin-top: 6px; padding: 8px 16px;
+  background: var(--yoga); border-radius: var(--radius-sm);
+  font-size: 12px; font-weight: 700; color: white;
+  transition: opacity .15s;
+}
+.save-note-btn:active { opacity: .8; }
+
+/* ══════════════════════════════
    UTILITIES
 ══════════════════════════════ */
 .hidden { display: none !important; }

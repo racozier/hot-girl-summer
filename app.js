@@ -120,14 +120,33 @@ let state = {
   viewedWeekOffset: 0    // offset from current week for week view navigation
 };
 
+const DEFAULT_BOOKS = [
+  { title: 'Atomic Habits',          startDate: null, finishDate: null, completed: false, notes: [] },
+  { title: 'The 5 AM Club',          startDate: null, finishDate: null, completed: false, notes: [] },
+  { title: 'You Are a Badass',       startDate: null, finishDate: null, completed: false, notes: [] },
+  { title: 'Untamed',                startDate: null, finishDate: null, completed: false, notes: [] },
+  { title: 'The Power of Now',       startDate: null, finishDate: null, completed: false, notes: [] },
+  { title: 'Girl, Stop Apologizing', startDate: null, finishDate: null, completed: false, notes: [] },
+];
+
 function loadState() {
-  state.startDate       = load(KEY.START, null);
-  state.workouts        = load(KEY.WORKOUTS, {});
-  state.sleep           = load(KEY.SLEEP, {});
-  state.books           = load(KEY.BOOKS, []);
-  state.reflections     = load(KEY.REFLECTIONS, {});
-  state.notifEnabled    = load(KEY.NOTIF, false);
-  state.trackerSelectedDate = todayStr();
+  state.startDate            = load(KEY.START, null);
+  state.workouts             = load(KEY.WORKOUTS, {});
+  state.sleep                = load(KEY.SLEEP, {});
+  state.books                = load(KEY.BOOKS, null);
+  state.reflections          = load(KEY.REFLECTIONS, {});
+  state.notifEnabled         = load(KEY.NOTIF, false);
+  state.trackerSelectedDate  = todayStr();
+  state.challengeSelectedDate = todayStr();
+  state.daySchedOpen         = true;
+
+  // Seed default books on first run
+  if (!state.books) {
+    state.books = DEFAULT_BOOKS.map((b, i) => ({ ...b, id: `default_${i}` }));
+    save(KEY.BOOKS, state.books);
+  }
+  // Ensure every book has a notes array (migration)
+  state.books.forEach(b => { if (!b.notes) b.notes = []; });
 }
 
 function persist() {
@@ -267,6 +286,8 @@ function dayStatus(dateStr) {
 }
 
 // Returns CSS class for workout circle based on completed categories
+const CAT_ORDER = ['cf', 'yoga', 'other'];
+
 function circleClass(dateStr) {
   const today = todayStr();
   if (dateStr > today) return 'future';
@@ -281,8 +302,9 @@ function circleClass(dateStr) {
   if (!doneCats.length) return dateStr < today ? 'missed' : '';
   if (doneCats.length === 1) return `cat-${doneCats[0]}`;
   if (doneCats.length === 2) {
-    const sorted = doneCats.sort().join('-');
-    return `split-${sorted}`;
+    // Use fixed category order so CSS class always matches: cf → yoga → other
+    const sorted = doneCats.sort((a, b) => CAT_ORDER.indexOf(a) - CAT_ORDER.indexOf(b));
+    return `split-${sorted.join('-')}`;
   }
   return 'triple';
 }
@@ -356,6 +378,7 @@ function weeklyWorkoutPct(weekStart) {
   let scheduled = 0, completed = 0;
   days.forEach(d => {
     if (d > today) return;
+    if (state.startDate && d < state.startDate) return; // exclude pre-program days
     const sched = scheduleForDate(d);
     scheduled += sched.length;
     sched.forEach(w => { if (isWorkoutComplete(d, w.id)) completed++; });
@@ -368,14 +391,13 @@ function weeklySleepPct(weekStart) {
   const days = getWeekDays(weekStart);
   const today = todayStr();
   let logged = 0;
-  days.forEach(d => {
-    if (d > today) return;
+  const validDays = days.filter(d => d <= today && (!state.startDate || d >= state.startDate));
+  validDays.forEach(d => {
     const s = state.sleep[d];
     if (s && parseFloat(s.hours) >= 7) logged++;
   });
-  const pastDays = days.filter(d => d <= today).length;
-  if (!pastDays) return 0;
-  return Math.round((logged / pastDays) * 100);
+  if (!validDays.length) return 0;
+  return Math.round((logged / validDays.length) * 100);
 }
 
 function weeklyBreakdown(weekStart) {
@@ -481,86 +503,132 @@ function renderChallengeTab() {
   document.getElementById('day-counter').innerHTML = `${Math.max(1, Math.min(day, PROGRAM_DAYS))} <span>/ ${PROGRAM_DAYS}</span>`;
   document.getElementById('day-label').textContent = `Week ${week} of ${WEEKS}`;
 
-  renderTodayWorkoutsInChallenge(today);
+  renderDayViewInChallenge();
   renderWeekViewInChallenge();
   renderBreakdown();
 }
 
-function renderTodayWorkoutsInChallenge(dateStr) {
-  const dateLabel = document.getElementById('today-date-label');
-  dateLabel.textContent = formatDateLabel(dateStr);
-
-  const grid = document.getElementById('today-workout-grid');
+// Shared schedule checklist — used by both day view and week view
+function renderDaySchedule(dateStr, listEl) {
   const sched = scheduleForDate(dateStr);
   const data = workoutDataForDate(dateStr);
+  const today = todayStr();
+  const isFuture = dateStr > today;
 
   if (!sched.length) {
-    grid.innerHTML = `
-      <div class="rest-day-card">
-        <div class="rest-icon">🧘</div>
-        <h3>Rest &amp; Recover</h3>
-        <p>No workouts scheduled today.<br>Take it easy and recharge.</p>
-      </div>`;
+    listEl.innerHTML = `<div class="sched-rest">&#x1F60C; Rest day — you've earned it!</div>`;
     return;
   }
 
-  grid.innerHTML = sched.map(w => {
+  listEl.innerHTML = sched.map(w => {
     const logged = data[w.id];
     const done = logged?.done;
     const feel = logged?.feel || '';
     const time = logged?.time || '';
-    const catClass = done ? w.cat : `pending-${w.cat}`;
     return `
-      <div class="workout-tap-card ${done ? 'done' : ''}" data-date="${dateStr}" data-workout="${w.id}">
-        <div class="big-circle ${catClass}">
-          ${done ? `<span class="check-mark">✓</span>${feel ? `<span class="feel-emoji">${feel}</span>` : ''}` : ''}
+      <div class="sched-item ${done ? 'sched-done' : ''} ${isFuture ? 'sched-future' : ''}"
+           data-date="${dateStr}" data-workout="${w.id}">
+        <div class="sched-check ${w.cat} ${done ? 'checked' : ''}"></div>
+        <div class="sched-text">
+          <span class="sched-name ${done ? 'sched-strike' : ''}">${w.label}</span>
+          ${time ? `<span class="sched-time">${time}${feel ? ' · ' + feel : ''}</span>` : ''}
         </div>
-        <div class="workout-name">${w.label}</div>
-        ${time ? `<div class="workout-time">${time}</div>` : ''}
+        ${feel ? `<span class="sched-feel">${feel}</span>` : ''}
       </div>`;
   }).join('');
 
-  // tap to log / toggle
-  grid.querySelectorAll('.workout-tap-card').forEach(card => {
-    card.addEventListener('click', () => {
-      const wid = card.dataset.workout;
-      const dstr = card.dataset.date;
-      const w = sched.find(x => x.id === wid);
-      if (isWorkoutComplete(dstr, wid)) {
-        unlogWorkout(dstr, wid);
-        renderChallengeTab();
-      } else {
-        openFeelModal(wid, w.label, dstr, () => {
+  if (!isFuture) {
+    listEl.querySelectorAll('.sched-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const wid = item.dataset.workout;
+        const dstr = item.dataset.date;
+        const w = sched.find(x => x.id === wid);
+        if (isWorkoutComplete(dstr, wid)) {
+          unlogWorkout(dstr, wid);
           renderChallengeTab();
           renderTrackerTab();
-        });
-      }
+        } else {
+          openFeelModal(wid, w.label, dstr, () => {
+            renderChallengeTab();
+            renderTrackerTab();
+            document.getElementById('streak-count').textContent = getCurrentStreak();
+          });
+        }
+      });
     });
+  }
+}
+
+function renderDayViewInChallenge() {
+  const dateStr = todayStr();
+  document.getElementById('today-date-label').textContent = formatDateLabel(dateStr);
+
+  const grid = document.getElementById('today-workout-grid');
+  const open = state.daySchedOpen !== false;
+
+  grid.innerHTML = `
+    <div class="sched-block">
+      <button class="sched-toggle-btn" id="sched-toggle-btn">
+        <span>TODAY'S SCHEDULE</span>
+        <span class="sched-arrow ${open ? 'open' : ''}">&#9660;</span>
+      </button>
+      <div class="sched-list-wrap ${open ? '' : 'collapsed'}" id="sched-list-wrap">
+        <div id="today-sched-list"></div>
+      </div>
+    </div>`;
+
+  renderDaySchedule(dateStr, document.getElementById('today-sched-list'));
+
+  document.getElementById('sched-toggle-btn').addEventListener('click', () => {
+    state.daySchedOpen = !state.daySchedOpen;
+    document.getElementById('sched-list-wrap').classList.toggle('collapsed', !state.daySchedOpen);
+    document.querySelector('#sched-toggle-btn .sched-arrow').classList.toggle('open', state.daySchedOpen);
   });
 }
 
 function renderWeekViewInChallenge() {
   const today = todayStr();
   const baseWeekStart = getMonday(today);
-  const offset = state.viewedWeekOffset;
-  const weekStart = addDays(baseWeekStart, offset * 7);
+  const weekStart = addDays(baseWeekStart, state.viewedWeekOffset * 7);
   const days = getWeekDays(weekStart);
 
   const weekNum = programWeek(weekStart);
   document.getElementById('week-nav-title').textContent = `WEEK ${Math.max(1, weekNum)} OF ${WEEKS}`;
 
   const row = document.getElementById('week-grid-row');
-  const dayNames = ['M', 'T', 'W', 'TH', 'F', 'S', 'S'];
-  row.innerHTML = days.map((d, i) => {
+  row.innerHTML = days.map(d => {
     const cls = circleClass(d);
     const isToday = d === today;
+    const isSel = d === state.challengeSelectedDate;
     const dateNum = strToDate(d).getDate();
     return `
-      <div class="week-cell">
+      <div class="week-cell ${isSel ? 'sel-day' : ''}" data-date="${d}">
         <div class="w-circle ${cls} ${isToday ? 'today-ring' : ''}"></div>
         <div class="week-cell-date ${isToday ? 'today-date' : ''}">${dateNum}</div>
       </div>`;
   }).join('');
+
+  row.querySelectorAll('.week-cell').forEach(cell => {
+    cell.addEventListener('click', () => {
+      state.challengeSelectedDate = cell.dataset.date;
+      row.querySelectorAll('.week-cell').forEach(c => c.classList.remove('sel-day'));
+      cell.classList.add('sel-day');
+      renderWeekDaySchedule(cell.dataset.date);
+    });
+  });
+
+  if (state.challengeSelectedDate) renderWeekDaySchedule(state.challengeSelectedDate);
+}
+
+function renderWeekDaySchedule(dateStr) {
+  const el = document.getElementById('week-day-schedule');
+  el.classList.remove('hidden');
+  const d = strToDate(dateStr);
+  const label = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }).toUpperCase();
+  el.innerHTML = `
+    <div class="week-sched-header">${label}</div>
+    <div id="week-sched-list"></div>`;
+  renderDaySchedule(dateStr, document.getElementById('week-sched-list'));
 }
 
 function renderBreakdown() {
@@ -741,13 +809,21 @@ function renderReadingTab() {
 
   list.innerHTML = books.map(book => {
     const status = book.completed ? 'completed' : book.startDate ? 'reading' : 'unstarted';
-    const badge = book.completed ? '💪' : '';
+    const badge = book.completed ? '&#x1F4AA;' : '';
     const statusLabel = book.completed ? 'Completed' : book.startDate ? 'Reading' : 'Up Next';
     const dateStr = book.startDate
       ? (book.completed
           ? `${formatShortDate(book.startDate)} → ${formatShortDate(book.finishDate)}`
           : `Started ${formatShortDate(book.startDate)}`)
       : '';
+    const notes = book.notes || [];
+    const notesHtml = notes.map((n, ni) => `
+      <div class="book-note">
+        <div class="note-text">${escHtml(n.text)}</div>
+        <div class="note-meta">${new Date(n.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
+        <button class="delete-note-btn" data-id="${book.id}" data-ni="${ni}">✕</button>
+      </div>`).join('');
+
     return `
       <div class="book-item" data-id="${book.id}">
         <div class="book-spine ${status}"></div>
@@ -761,6 +837,17 @@ function renderReadingTab() {
           <div class="book-actions">
             ${!book.completed ? `<button class="book-action-btn complete-btn" data-id="${book.id}">Mark Complete</button>` : ''}
             <button class="book-action-btn delete-book-btn" data-id="${book.id}">Remove</button>
+          </div>
+          <div class="book-notes-section">
+            <div class="book-notes-header">
+              <span class="book-notes-label">Notes ${notes.length ? `(${notes.length})` : ''}</span>
+              <button class="add-note-btn" data-id="${book.id}">+ Add note</button>
+            </div>
+            ${notesHtml}
+            <div class="note-form hidden" id="note-form-${book.id}">
+              <textarea class="note-input" id="note-input-${book.id}" placeholder="Save a quote, thought, or insight..."></textarea>
+              <button class="save-note-btn" data-id="${book.id}">Save</button>
+            </div>
           </div>
         </div>
       </div>`;
@@ -777,6 +864,35 @@ function renderReadingTab() {
         persist();
         renderReadingTab();
       }
+    });
+  });
+  list.querySelectorAll('.add-note-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const form = document.getElementById(`note-form-${btn.dataset.id}`);
+      form.classList.toggle('hidden');
+      if (!form.classList.contains('hidden')) form.querySelector('textarea').focus();
+    });
+  });
+  list.querySelectorAll('.save-note-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const bookId = btn.dataset.id;
+      const input = document.getElementById(`note-input-${bookId}`);
+      const text = input.value.trim();
+      if (!text) return;
+      const book = state.books.find(b => b.id === bookId);
+      if (!book.notes) book.notes = [];
+      book.notes.push({ text, timestamp: new Date().toISOString() });
+      persist();
+      renderReadingTab();
+    });
+  });
+  list.querySelectorAll('.delete-note-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const book = state.books.find(b => b.id === btn.dataset.id);
+      if (book) { book.notes.splice(Number(btn.dataset.ni), 1); persist(); renderReadingTab(); }
     });
   });
 }
