@@ -637,6 +637,7 @@ input[type="date"], input[type="time"] { color-scheme: dark; }
 
 /* 12-Week Grid */
 .challenge-grid-section { margin: 0 16px 16px; }
+.challenge-grid-section + .challenge-grid-section { margin-top: 4px; }
 .grid-week-row {
   display: grid; grid-template-columns: 28px repeat(7, 1fr);
   gap: 4px; margin-bottom: 5px; align-items: center;

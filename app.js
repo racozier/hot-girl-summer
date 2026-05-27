@@ -342,6 +342,36 @@ function getMonday(dateStr) {
 }
 
 // ════════════════════════════════════════
+// TIME UTILS
+// ════════════════════════════════════════
+
+function timeToMins(timeStr) {
+  if (!timeStr) return 9999;
+  const s = timeStr.trim().toUpperCase();
+  if (s.includes('AM') || s.includes('PM')) {
+    const isPM = s.includes('PM');
+    const clean = s.replace(/[APM\s]/g, '');
+    let [h, m] = clean.split(':').map(Number);
+    if (isNaN(m)) m = 0;
+    if (isPM && h !== 12) h += 12;
+    if (!isPM && h === 12) h = 0;
+    return h * 60 + m;
+  }
+  let [h, m] = timeStr.split(':').map(Number);
+  if (isNaN(m)) m = 0;
+  return h * 60 + m;
+}
+
+function formatTimeDisplay(timeStr) {
+  if (!timeStr) return '';
+  if (timeStr.includes('AM') || timeStr.includes('PM')) return timeStr;
+  const [hh, mm] = timeStr.split(':').map(Number);
+  const period = hh >= 12 ? 'PM' : 'AM';
+  const h12 = hh === 0 ? 12 : hh > 12 ? hh - 12 : hh;
+  return `${h12}:${String(mm).padStart(2, '0')} ${period}`;
+}
+
+// ════════════════════════════════════════
 // WORKOUT UTILS
 // ════════════════════════════════════════
 
@@ -359,13 +389,13 @@ function effectiveWorkoutsForDate(dateStr) {
   return [...standard, ...custom];
 }
 
-// Full day schedule for rendering: DAY_SCHEDULES minus removals, plus additions
+// Full day schedule for rendering: DAY_SCHEDULES minus removals, plus additions, sorted by time
 function effectiveDaySchedule(dateStr) {
   const removals = state.dayRemovals[dateStr] || [];
   const dow = dayOfWeek(dateStr);
   const standard = (DAY_SCHEDULES[dow] || []).filter(i => !removals.includes(i.id));
   const additions = state.dayAdditions[dateStr] || [];
-  return [...standard, ...additions];
+  return [...standard, ...additions].sort((a, b) => timeToMins(a.time) - timeToMins(b.time));
 }
 
 function workoutDataForDate(dateStr) {
@@ -667,7 +697,7 @@ function renderDayViewInChallenge() {
       <div class="day-sched-item ${isDone ? 'done-item' : ''} ${isFuture ? 'future-sched-item' : ''}"
            data-id="${item.id}" data-type="${item.type}" data-cat="${item.cat || ''}" data-wid="${item.wid || ''}" data-custom="${isCustom}">
         <button class="day-item-remove" data-id="${item.id}" data-custom="${isCustom}" aria-label="Remove">×</button>
-        <div class="day-item-time">${item.time || '+'}</div>
+        <div class="day-item-time">${formatTimeDisplay(item.time)}</div>
         <div class="day-item-dot ${dotClass}"></div>
         <div class="day-item-content">
           <div class="day-item-label ${isDone ? 'done-strike' : ''}">${item.label}</div>
@@ -900,7 +930,7 @@ function renderWeekDaySchedule(dateStr) {
         <div class="day-sched-item ${isDone ? 'done-item' : ''} ${isFuture ? 'future-sched-item' : ''}"
              data-id="${item.id}" data-type="${item.type}" data-cat="${item.cat || ''}" data-wid="${item.wid || ''}" data-custom="${isCustom}">
           <button class="day-item-remove" data-id="${item.id}" data-custom="${isCustom}" aria-label="Remove">×</button>
-          <div class="day-item-time">${item.time || '+'}</div>
+          <div class="day-item-time">${formatTimeDisplay(item.time)}</div>
           <div class="day-item-dot ${dotClass}"></div>
           <div class="day-item-content">
             <div class="day-item-label ${isDone ? 'done-strike' : ''}">${item.label}</div>
@@ -1356,32 +1386,30 @@ function renderReadingTab() {
 // RENDER – PROGRESS TAB
 // ════════════════════════════════════════
 
+const GRID_CF_COLOR    = '#ef4444';
+const GRID_YOGA_COLOR  = '#ffffff';
+const GRID_OTHER_COLOR = '#89CFF0';
+const GRID_DIM         = '#1e1e1e';
+
+function progressCircleStyle(dateStr) {
+  const today = todayStr();
+  if (dateStr > today || (state.startDate && dateStr < state.startDate)) return null;
+  const sched = effectiveWorkoutsForDate(dateStr);
+  if (!sched.length) return null;
+  const data = workoutDataForDate(dateStr);
+  const cfDone    = sched.some(w => w.cat === 'cf'    && data[w.id]?.done);
+  const yogaDone  = sched.some(w => w.cat === 'yoga'  && data[w.id]?.done);
+  const otherDone = sched.some(w => w.cat === 'other' && data[w.id]?.done);
+  const cf    = cfDone    ? GRID_CF_COLOR    : GRID_DIM;
+  const yoga  = yogaDone  ? GRID_YOGA_COLOR  : GRID_DIM;
+  const other = otherDone ? GRID_OTHER_COLOR : GRID_DIM;
+  return `conic-gradient(${cf} 0deg 120deg, ${yoga} 120deg 240deg, ${other} 240deg 360deg)`;
+}
+
 function renderProgressTab() {
   const today = todayStr();
   const streak = getCurrentStreak();
   const day = Math.max(1, Math.min(programDay(today), PROGRAM_DAYS));
-  const phase = currentPhase(today);
-  const phaseIdx = PHASES.indexOf(phase);
-
-  document.getElementById('progress-stats-row').innerHTML = `
-    <div class="stat-card">
-      <div class="stat-val">${streak}</div>
-      <div class="stat-sub">🔥 Day Streak</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-val">${day}</div>
-      <div class="stat-sub">Day of ${PROGRAM_DAYS}</div>
-    </div>`;
-
-  const phaseStartDay = phaseIdx * 28 + 1;
-  const phasePct = Math.min(100, Math.max(0, Math.round(((day - phaseStartDay) / 28) * 100)));
-  document.getElementById('phase-progress-section').innerHTML = `
-    <div class="phase-row">
-      <div class="phase-name">Phase ${phaseIdx + 1}: ${phase.name}</div>
-      <div class="phase-weeks">Weeks ${phase.weeks}</div>
-    </div>
-    <div class="phase-bar"><div class="phase-fill" style="width:${phasePct}%"></div></div>
-    <div style="font-size:12px;color:var(--text-3);margin-top:8px">${phasePct}% complete</div>`;
 
   if (day > PROGRAM_DAYS && !document.getElementById('recap-card')) {
     const recap = document.createElement('div');
@@ -1398,6 +1426,7 @@ function renderProgressTab() {
   }
 
   renderChallengeGrid();
+  renderSleepGrid();
 
   const dow = strToDate(today).getDay();
   const reflSec = document.getElementById('reflection-section');
@@ -1423,13 +1452,57 @@ function renderChallengeGrid() {
 
     html += `<div class="grid-week-row"><div class="grid-week-label">${w}</div>`;
     days.forEach(d => {
-      const cls = circleClass(d);
       const isToday = d === today;
-      const sleepHrs = state.sleep[d]?.hours;
-      const showSleep = sleepHrs && cls !== 'future' && cls !== 'rest' && cls !== '';
-      html += `<div class="grid-circle ${cls} ${isToday ? 'today-ring' : ''}">
-        ${showSleep ? `<span class="grid-sleep-hrs">${sleepHrs}</span>` : ''}
-      </div>`;
+      const gradient = progressCircleStyle(d);
+      let cls = '';
+      let styleAttr = '';
+      if (gradient) {
+        styleAttr = `style="background:${gradient}"`;
+      } else {
+        const isFuture = d > today || (state.startDate && d < state.startDate);
+        const sched = effectiveWorkoutsForDate(d);
+        cls = isFuture ? 'future' : (!sched.length ? 'rest' : '');
+      }
+      html += `<div class="grid-circle ${cls} ${isToday ? 'today-ring' : ''}" ${styleAttr}></div>`;
+    });
+    html += `</div>`;
+  }
+  grid.innerHTML = html;
+}
+
+function renderSleepGrid() {
+  const grid = document.getElementById('sleep-grid');
+  if (!grid) return;
+  if (!state.startDate) {
+    grid.innerHTML = '';
+    return;
+  }
+  const today = todayStr();
+  let html = '';
+
+  for (let w = 1; w <= WEEKS; w++) {
+    const weekAnchorDate = addDays(state.startDate, (w - 1) * 7);
+    const weekMonday = getMonday(weekAnchorDate);
+    const days = getWeekDays(weekMonday);
+
+    html += `<div class="grid-week-row"><div class="grid-week-label">${w}</div>`;
+    days.forEach(d => {
+      const isToday = d === today;
+      const isFuture = d > today || d < state.startDate;
+      const sleep = state.sleep[d];
+      let cls = isFuture ? 'future' : '';
+      let styleAttr = '';
+      let inner = '';
+
+      if (!isFuture && (sleep?.quality || sleep?.hours)) {
+        const bg = sleep.quality === 'Great' ? '#22c55e'
+                 : sleep.quality === 'Poor'  ? '#ef4444'
+                 : '#eab308';
+        styleAttr = `style="background:${bg}"`;
+        if (sleep.hours) inner = `<span class="grid-sleep-hrs">${sleep.hours}h</span>`;
+      }
+
+      html += `<div class="grid-circle ${cls} ${isToday ? 'today-ring' : ''}" ${styleAttr}>${inner}</div>`;
     });
     html += `</div>`;
   }
@@ -1514,6 +1587,7 @@ function openAddItemModal(dateStr, cb) {
   addItemPending = { date: dateStr, cb };
   addItemSelectedCat = 'other';
   document.getElementById('add-item-name-input').value = '';
+  document.getElementById('add-item-time-input').value = '';
   document.querySelectorAll('.add-item-cat').forEach(b => {
     b.classList.toggle('selected', b.dataset.cat === 'other');
   });
@@ -1771,7 +1845,9 @@ function attachEvents() {
     let label = cat === 'cf' ? 'CrossFit' : cat === 'yoga' ? 'Hot Yoga' : document.getElementById('add-item-name-input').value.trim();
     if (cat === 'other' && !label) { document.getElementById('add-item-name-input').focus(); return; }
     const id = `custom_${Date.now()}`;
-    const item = { id, wid: id, label, cat, type: 'workout', time: '', isCustom: true };
+    const timeRaw = document.getElementById('add-item-time-input').value;
+    const time = timeRaw ? formatTimeDisplay(timeRaw) : '';
+    const item = { id, wid: id, label, cat, type: 'workout', time, isCustom: true };
     const dateStr = addItemPending.date;
     if (!state.dayAdditions[dateStr]) state.dayAdditions[dateStr] = [];
     state.dayAdditions[dateStr].push(item);
