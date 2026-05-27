@@ -748,10 +748,12 @@ input[type="date"], input[type="time"] { color-scheme: dark; }
 
 /* Settings back button */
 .settings-back-btn {
-  display: flex; align-items: center; gap: 6px;
-  color: var(--text-2); font-size: 14px; font-weight: 600;
-  padding: 4px 0 12px; margin-bottom: 4px;
-  border-bottom: 1px solid rgba(255,255,255,.06); width: 100%;
+  width: 100%; padding: 12px;
+  background: var(--surface-2);
+  border-radius: var(--radius);
+  font-size: 14px; font-weight: 700;
+  color: var(--text-2); text-align: center;
+  margin-top: 8px;
 }
 
 /* ══════════════════════════════
