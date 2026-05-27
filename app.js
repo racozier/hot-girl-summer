@@ -212,7 +212,8 @@ let state = {
   challengeView: 'day',
   challengeSelectedDate: null,
   trackerSelectedDate: null,
-  viewedWeekOffset: 0
+  viewedWeekOffset: 0,
+  monthViewDate: null
 };
 
 function loadState() {
@@ -344,6 +345,14 @@ function getMonday(dateStr) {
 // ════════════════════════════════════════
 // TIME UTILS
 // ════════════════════════════════════════
+
+function fmt24to12(val) {
+  if (!val) return '';
+  const [hh, mm] = val.split(':').map(Number);
+  const period = hh >= 12 ? 'PM' : 'AM';
+  const h12 = hh === 0 ? 12 : hh > 12 ? hh - 12 : hh;
+  return `${h12}:${String(mm).padStart(2, '0')} ${period}`;
+}
 
 function timeToMins(timeStr) {
   if (!timeStr) return 9999;
@@ -710,8 +719,8 @@ function renderDayViewInChallenge() {
   });
 
   html += `<button class="add-sched-item-btn" id="add-sched-item-btn">+ Add Workout</button>`;
+  html += `<button class="add-sched-item-btn" id="add-sched-event-btn">+ Add Event</button>`;
 
-  // Day notes
   const dayNotesList = state.dayNotes[dateStr] || [];
   const notesHtml = dayNotesList.map((n, ni) => `
     <div class="day-note-item">
@@ -721,14 +730,14 @@ function renderDayViewInChallenge() {
     </div>`).join('');
 
   html += `<div class="day-notes-wrap">
-    <div class="day-notes-header">
-      <span class="day-notes-label">Notes</span>
-      <button class="add-day-note-btn" id="add-day-note-btn">+ Add note</button>
-    </div>
     <div id="day-notes-list">${notesHtml}</div>
+    <button class="add-sched-item-btn" id="add-day-note-btn" style="margin-top:0">+ Add Note</button>
     <div class="day-note-form hidden" id="day-note-form">
       <textarea class="day-notes-input" id="day-note-input" placeholder="How's your day going? Any wins, thoughts, reflections..."></textarea>
-      <button class="save-day-note-btn" id="save-day-note-btn">Save</button>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="save-day-note-btn" id="save-day-note-btn">Save</button>
+        <button class="skip-notes-btn" id="cancel-day-note-btn" style="flex:1;margin-top:0">Cancel</button>
+      </div>
     </div>
   </div>`;
 
@@ -736,6 +745,10 @@ function renderDayViewInChallenge() {
 
   document.getElementById('add-sched-item-btn').addEventListener('click', () => {
     openAddItemModal(dateStr, () => { renderDayViewInChallenge(); renderTrackerTab(); renderWeekViewInChallenge(); document.getElementById('streak-count').textContent = getCurrentStreak(); });
+  });
+
+  document.getElementById('add-sched-event-btn').addEventListener('click', () => {
+    openAddEventModal(dateStr, () => { renderDayViewInChallenge(); renderWeekViewInChallenge(); });
   });
 
   grid.querySelectorAll('.day-item-remove').forEach(btn => {
@@ -782,6 +795,10 @@ function renderDayViewInChallenge() {
     const form = document.getElementById('day-note-form');
     form.classList.toggle('hidden');
     if (!form.classList.contains('hidden')) document.getElementById('day-note-input').focus();
+  });
+
+  document.getElementById('cancel-day-note-btn').addEventListener('click', () => {
+    document.getElementById('day-note-form').classList.add('hidden');
   });
 
   document.getElementById('save-day-note-btn').addEventListener('click', () => {
@@ -1026,6 +1043,60 @@ function renderWeekDaySchedule(dateStr) {
       });
     });
   }
+}
+
+// ════════════════════════════════════════
+// RENDER – MONTH VIEW
+// ════════════════════════════════════════
+
+function renderMonthView() {
+  if (!state.monthViewDate) state.monthViewDate = todayStr().substring(0, 7);
+  const [y, m] = state.monthViewDate.split('-').map(Number);
+  const monthName = new Date(y, m - 1, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase();
+  document.getElementById('month-nav-title').textContent = monthName;
+  const today = todayStr();
+  const firstDow = (new Date(y, m - 1, 1).getDay() + 6) % 7; // Mon=0
+  const daysInMonth = new Date(y, m, 0).getDate();
+  const grid = document.getElementById('month-grid');
+  let html = '';
+  for (let i = 0; i < firstDow; i++) html += `<div class="month-cell month-empty"></div>`;
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isToday = dateStr === today;
+    const isSel = dateStr === state.challengeSelectedDate;
+    const gradStyle = progressCircleStyle(dateStr);
+    const bgStyle = gradStyle ? `background:${gradStyle}` : '';
+    html += `<div class="month-cell ${isToday ? 'month-today' : ''} ${isSel ? 'month-sel' : ''}" data-date="${dateStr}">
+      <div class="month-day-circle" style="${bgStyle}">
+        <span class="month-day-num">${d}</span>
+      </div>
+    </div>`;
+  }
+  grid.innerHTML = html;
+  document.getElementById('month-prev-btn').onclick = () => {
+    let mo = m - 1, yr = y;
+    if (mo < 1) { mo = 12; yr--; }
+    state.monthViewDate = `${yr}-${String(mo).padStart(2,'0')}`;
+    renderMonthView();
+  };
+  document.getElementById('month-next-btn').onclick = () => {
+    let mo = m + 1, yr = y;
+    if (mo > 12) { mo = 1; yr++; }
+    state.monthViewDate = `${yr}-${String(mo).padStart(2,'0')}`;
+    renderMonthView();
+  };
+  grid.querySelectorAll('.month-cell[data-date]').forEach(cell => {
+    cell.addEventListener('click', () => {
+      state.challengeSelectedDate = cell.dataset.date;
+      document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('btn-day-view').classList.add('active');
+      document.getElementById('day-view').classList.remove('hidden');
+      document.getElementById('week-view').classList.add('hidden');
+      document.getElementById('month-view').classList.add('hidden');
+      state.challengeView = 'day';
+      renderDayViewInChallenge();
+    });
+  });
 }
 
 // Compact checklist used in Week view day panel
@@ -1387,9 +1458,7 @@ function renderReadingTab() {
 // ════════════════════════════════════════
 
 const GRID_CF_COLOR    = '#ef4444';
-const GRID_YOGA_COLOR  = '#ffffff';
-const GRID_OTHER_COLOR = '#89CFF0';
-const GRID_DIM         = '#1e1e1e';
+const GRID_DIM         = '#222';
 
 function progressCircleStyle(dateStr) {
   const today = todayStr();
@@ -1400,9 +1469,11 @@ function progressCircleStyle(dateStr) {
   const cfDone    = sched.some(w => w.cat === 'cf'    && data[w.id]?.done);
   const yogaDone  = sched.some(w => w.cat === 'yoga'  && data[w.id]?.done);
   const otherDone = sched.some(w => w.cat === 'other' && data[w.id]?.done);
-  const cf    = cfDone    ? GRID_CF_COLOR    : GRID_DIM;
-  const yoga  = yogaDone  ? GRID_YOGA_COLOR  : GRID_DIM;
-  const other = otherDone ? GRID_OTHER_COLOR : GRID_DIM;
+  const hasYoga  = sched.some(w => w.cat === 'yoga');
+  const hasOther = sched.some(w => w.cat === 'other');
+  const cf    = cfDone    ? GRID_CF_COLOR : GRID_DIM;
+  const yoga  = yogaDone  ? '#a855f7' : (hasYoga  ? '#2a1535' : GRID_DIM);
+  const other = otherDone ? '#22c55e' : (hasOther ? '#1a3a1a' : GRID_DIM);
   return `conic-gradient(${cf} 0deg 120deg, ${yoga} 120deg 240deg, ${other} 240deg 360deg)`;
 }
 
@@ -1602,6 +1673,26 @@ function closeAddItemModal() {
 }
 
 // ════════════════════════════════════════
+// ADD EVENT MODAL
+// ════════════════════════════════════════
+
+let addEventPending = { date: null, cb: null };
+
+function openAddEventModal(dateStr, cb) {
+  addEventPending = { date: dateStr, cb };
+  document.getElementById('add-event-title-input').value = '';
+  document.getElementById('add-event-time-input').value = '';
+  document.getElementById('add-event-note-input').value = '';
+  document.getElementById('add-event-modal').classList.add('open');
+  setTimeout(() => document.getElementById('add-event-title-input').focus(), 300);
+}
+
+function closeAddEventModal() {
+  document.getElementById('add-event-modal').classList.remove('open');
+  addEventPending = { date: null, cb: null };
+}
+
+// ════════════════════════════════════════
 // FEEL MODAL (kept for backwards compat, not actively triggered)
 // ════════════════════════════════════════
 
@@ -1765,6 +1856,8 @@ function attachEvents() {
     btn.classList.add('active');
     document.getElementById('day-view').classList.toggle('hidden', view !== 'day');
     document.getElementById('week-view').classList.toggle('hidden', view !== 'week');
+    document.getElementById('month-view').classList.toggle('hidden', view !== 'month');
+    if (view === 'month') renderMonthView();
   });
 
   // Week navigation
@@ -1859,6 +1952,33 @@ function attachEvents() {
   document.getElementById('add-item-modal').addEventListener('click', e => {
     if (e.target === document.getElementById('add-item-modal')) closeAddItemModal();
   });
+  document.getElementById('add-item-cancel-btn').addEventListener('click', closeAddItemModal);
+
+  // Add event modal — confirm
+  document.getElementById('add-event-confirm-btn').addEventListener('click', () => {
+    if (!addEventPending.date) return;
+    const title = document.getElementById('add-event-title-input').value.trim();
+    if (!title) { document.getElementById('add-event-title-input').focus(); return; }
+    const timeVal = document.getElementById('add-event-time-input').value;
+    const timeStr = fmt24to12(timeVal);
+    const notes = document.getElementById('add-event-note-input').value.trim();
+    const id = `event_${Date.now()}`;
+    const item = { id, wid: id, label: title, cat: 'routine', type: 'event', time: timeStr, notes: notes || null, isCustom: true };
+    const dateStr = addEventPending.date;
+    if (!state.dayAdditions[dateStr]) state.dayAdditions[dateStr] = [];
+    state.dayAdditions[dateStr].push(item);
+    persist();
+    const cb = addEventPending.cb;
+    closeAddEventModal();
+    if (cb) cb();
+  });
+  document.getElementById('add-event-cancel-btn').addEventListener('click', closeAddEventModal);
+  document.getElementById('add-event-modal').addEventListener('click', e => {
+    if (e.target === document.getElementById('add-event-modal')) closeAddEventModal();
+  });
+
+  // Settings back button
+  document.getElementById('settings-back-btn').addEventListener('click', closeSettings);
 
   // Add book button
   document.getElementById('add-book-btn').addEventListener('click', openAddBookModal);

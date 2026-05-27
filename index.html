@@ -66,6 +66,7 @@
       <div class="view-toggle">
         <button class="view-btn active" data-view="day" id="btn-day-view">Today</button>
         <button class="view-btn" data-view="week" id="btn-week-view">Week</button>
+        <button class="view-btn" data-view="month" id="btn-month-view">Month</button>
       </div>
 
       <!-- Day View -->
@@ -93,6 +94,19 @@
         <div id="week-day-schedule" class="week-day-schedule hidden">
           <!-- populated by JS when a day is tapped -->
         </div>
+      </div>
+
+      <!-- Month View -->
+      <div id="month-view" class="hidden">
+        <div class="month-nav">
+          <button class="week-nav-btn" id="month-prev-btn">‹</button>
+          <span class="month-nav-title" id="month-nav-title">MAY 2026</span>
+          <button class="week-nav-btn" id="month-next-btn">›</button>
+        </div>
+        <div class="month-grid-header">
+          <span>M</span><span>T</span><span>W</span><span>TH</span><span>F</span><span>S</span><span>S</span>
+        </div>
+        <div class="month-grid" id="month-grid"></div>
       </div>
 
       <!-- This Week Breakdown -->
@@ -250,6 +264,7 @@
 <!-- ═══ SETTINGS ═══ -->
 <div class="settings-overlay" id="settings-overlay">
   <div class="settings-panel">
+    <button class="settings-back-btn" id="settings-back-btn">← Back</button>
     <h2>Settings ⚙️</h2>
     <div class="settings-item">
       <label>Challenge Start Date</label>
@@ -289,6 +304,29 @@
       <input type="time" id="add-item-time-input" class="form-input">
     </div>
     <button class="modal-confirm-btn" id="add-item-confirm-btn">Add to Schedule</button>
+    <button class="skip-notes-btn" id="add-item-cancel-btn">Cancel</button>
+  </div>
+</div>
+
+<!-- ═══ ADD EVENT MODAL ═══ -->
+<div class="modal-overlay" id="add-event-modal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Add an Event ✨</div>
+    <div class="form-group">
+      <label class="form-label">Title</label>
+      <input type="text" id="add-event-title-input" class="form-input" placeholder="e.g. Trivia Night, Book Club...">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Time (optional)</label>
+      <input type="time" id="add-event-time-input" class="form-input">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notes (optional)</label>
+      <textarea id="add-event-note-input" class="form-input" rows="2" placeholder="Any details..." style="resize:none;min-height:60px"></textarea>
+    </div>
+    <button class="modal-confirm-btn" id="add-event-confirm-btn">Add to Schedule</button>
+    <button class="skip-notes-btn" id="add-event-cancel-btn">Cancel</button>
   </div>
 </div>
 
