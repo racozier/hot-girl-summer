@@ -90,17 +90,19 @@ function getDailyQuote(dateStr) {
 // ════════════════════════════════════════
 
 const KEY = {
-  START:        'hgs_start',
-  WORKOUTS:     'hgs_workouts',
-  SLEEP:        'hgs_sleep',
-  BOOKS:        'hgs_books',
-  BOOKS_VER:    'hgs_books_ver',
-  REFLECTIONS:  'hgs_reflect',
-  ONBOARDED:    'hgs_onboarded',
-  NOTIF:        'hgs_notif',
-  NOTIF_DATE:   'hgs_notif_date',
-  DAILY_CHECKS: 'hgs_daily_checks',
-  DAY_NOTES:    'hgs_day_notes'
+  START:          'hgs_start',
+  WORKOUTS:       'hgs_workouts',
+  SLEEP:          'hgs_sleep',
+  BOOKS:          'hgs_books',
+  BOOKS_VER:      'hgs_books_ver',
+  REFLECTIONS:    'hgs_reflect',
+  ONBOARDED:      'hgs_onboarded',
+  NOTIF:          'hgs_notif',
+  NOTIF_DATE:     'hgs_notif_date',
+  DAILY_CHECKS:   'hgs_daily_checks',
+  DAY_NOTES:      'hgs_day_notes',
+  DAY_ADDITIONS:  'hgs_day_additions',
+  DAY_REMOVALS:   'hgs_day_removals'
 };
 
 function load(key, fallback) {
@@ -203,6 +205,8 @@ let state = {
   reflections: {},
   dailyChecks: {},
   dayNotes: {},
+  dayAdditions: {},
+  dayRemovals: {},
   notifEnabled: false,
   currentTab: 'challenge',
   challengeView: 'day',
@@ -219,6 +223,8 @@ function loadState() {
   state.notifEnabled          = load(KEY.NOTIF, false);
   state.dailyChecks           = load(KEY.DAILY_CHECKS, {});
   state.dayNotes              = load(KEY.DAY_NOTES, {});
+  state.dayAdditions          = load(KEY.DAY_ADDITIONS, {});
+  state.dayRemovals           = load(KEY.DAY_REMOVALS, {});
   // Migrate old string-format notes to array format
   Object.keys(state.dayNotes).forEach(k => {
     if (typeof state.dayNotes[k] === 'string') {
@@ -252,8 +258,10 @@ function persist() {
   save(KEY.SLEEP,        state.sleep);
   save(KEY.BOOKS,        state.books);
   save(KEY.REFLECTIONS,  state.reflections);
-  save(KEY.DAILY_CHECKS, state.dailyChecks);
-  save(KEY.DAY_NOTES,    state.dayNotes);
+  save(KEY.DAILY_CHECKS,  state.dailyChecks);
+  save(KEY.DAY_NOTES,     state.dayNotes);
+  save(KEY.DAY_ADDITIONS, state.dayAdditions);
+  save(KEY.DAY_REMOVALS,  state.dayRemovals);
 }
 
 // ════════════════════════════════════════
@@ -342,6 +350,24 @@ function scheduleForDate(dateStr) {
   return WORKOUT_SCHEDULE[dow] || [];
 }
 
+// Workouts for progress tracking: standard minus removals, plus custom additions
+function effectiveWorkoutsForDate(dateStr) {
+  const removals = state.dayRemovals[dateStr] || [];
+  const dow = dayOfWeek(dateStr);
+  const standard = (WORKOUT_SCHEDULE[dow] || []).filter(w => !removals.includes(w.id));
+  const custom = (state.dayAdditions[dateStr] || []).filter(i => i.type === 'workout');
+  return [...standard, ...custom];
+}
+
+// Full day schedule for rendering: DAY_SCHEDULES minus removals, plus additions
+function effectiveDaySchedule(dateStr) {
+  const removals = state.dayRemovals[dateStr] || [];
+  const dow = dayOfWeek(dateStr);
+  const standard = (DAY_SCHEDULES[dow] || []).filter(i => !removals.includes(i.id));
+  const additions = state.dayAdditions[dateStr] || [];
+  return [...standard, ...additions];
+}
+
 function workoutDataForDate(dateStr) {
   return state.workouts[dateStr] || {};
 }
@@ -368,7 +394,7 @@ function unlogWorkout(dateStr, workoutId) {
 
 function dayStatus(dateStr) {
   const today = todayStr();
-  const sched = scheduleForDate(dateStr);
+  const sched = effectiveWorkoutsForDate(dateStr);
   if (sched.length === 0) return 'rest';
   if (dateStr > today) return 'future';
   const data = workoutDataForDate(dateStr);
@@ -385,7 +411,7 @@ function circleClass(dateStr) {
   if (dateStr > today) return 'future';
   if (state.startDate && dateStr < state.startDate) return 'future';
 
-  const sched = scheduleForDate(dateStr);
+  const sched = effectiveWorkoutsForDate(dateStr);
   if (!sched.length) return 'rest';
 
   const data = workoutDataForDate(dateStr);
@@ -404,7 +430,7 @@ function challengeWeekCircleClass(dateStr) {
   const today = todayStr();
   if (state.startDate && dateStr < state.startDate) return 'future';
   if (dateStr > today) return 'future';
-  const sched = scheduleForDate(dateStr);
+  const sched = effectiveWorkoutsForDate(dateStr);
   if (!sched.length) return 'rest';
   if (dateStr === today) return 'wk-today';
   const data = workoutDataForDate(dateStr);
@@ -417,15 +443,14 @@ function getCurrentStreak() {
   let streak = 0;
   let d = todayStr();
 
-  // If today has no logs yet, start from yesterday
-  const todaySched = scheduleForDate(d);
+  const todaySched = effectiveWorkoutsForDate(d);
   const todayHasLog = todaySched.some(w => isWorkoutComplete(d, w.id));
   if (!todayHasLog && todaySched.length > 0) d = addDays(d, -1);
 
   for (let i = 0; i < PROGRAM_DAYS; i++) {
-    if (d < state.startDate) break; // don't count pre-program days
-    const sched = scheduleForDate(d);
-    if (sched.length === 0) { d = addDays(d, -1); continue; } // skip rest days
+    if (d < state.startDate) break;
+    const sched = effectiveWorkoutsForDate(d);
+    if (sched.length === 0) { d = addDays(d, -1); continue; }
     const hasLog = sched.some(w => isWorkoutComplete(d, w.id));
     if (hasLog) { streak++; d = addDays(d, -1); }
     else break;
@@ -439,7 +464,7 @@ function totalSessionsCompleted() {
   let d = state.startDate;
   const today = todayStr();
   while (d <= today) {
-    const sched = scheduleForDate(d);
+    const sched = effectiveWorkoutsForDate(d);
     sched.forEach(w => { if (isWorkoutComplete(d, w.id)) total++; });
     d = addDays(d, 1);
   }
@@ -485,7 +510,7 @@ function weeklyWorkoutPct(weekStart) {
   days.forEach(d => {
     if (d > today) return;
     if (state.startDate && d < state.startDate) return;
-    const sched = scheduleForDate(d);
+    const sched = effectiveWorkoutsForDate(d);
     scheduled += sched.length;
     sched.forEach(w => { if (isWorkoutComplete(d, w.id)) completed++; });
   });
@@ -500,7 +525,7 @@ function weeklyBreakdown(weekStart) {
   days.forEach(d => {
     if (d > today) return;
     if (state.startDate && d < state.startDate) return;
-    const sched = scheduleForDate(d);
+    const sched = effectiveWorkoutsForDate(d);
     const data = workoutDataForDate(d);
     sched.forEach(w => { if (data[w.id]?.done) counts[w.cat]++; });
   });
@@ -591,8 +616,7 @@ function renderDayViewInChallenge() {
   const dateStr = state.challengeSelectedDate || today;
   const isFuture = dateStr > today;
   const d = strToDate(dateStr);
-  const dow = d.getDay();
-  const schedule = DAY_SCHEDULES[dow] || [];
+  const schedule = effectiveDaySchedule(dateStr);
 
   const dayName = d.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
   const dateFmt = d.toLocaleDateString('en-US', { month: 'long', day: 'numeric' }).toUpperCase();
@@ -638,20 +662,24 @@ function renderDayViewInChallenge() {
       subInfo = `<div class="day-item-sub-info">${sl.bedtime ? `🌙 ${sl.bedtime}` : ''}${sl.favPart ? `<div class="day-item-favpart">"${escHtml(sl.favPart)}"</div>` : ''}</div>`;
     }
 
+    const isCustom = !!(item.isCustom);
     html += `
       <div class="day-sched-item ${isDone ? 'done-item' : ''} ${isFuture ? 'future-sched-item' : ''}"
-           data-id="${item.id}" data-type="${item.type}" data-cat="${item.cat || ''}" data-wid="${item.wid || ''}">
-        <div class="day-item-time">${item.time}</div>
+           data-id="${item.id}" data-type="${item.type}" data-cat="${item.cat || ''}" data-wid="${item.wid || ''}" data-custom="${isCustom}">
+        <button class="day-item-remove" data-id="${item.id}" data-custom="${isCustom}" aria-label="Remove">×</button>
+        <div class="day-item-time">${item.time || '+'}</div>
         <div class="day-item-dot ${dotClass}"></div>
         <div class="day-item-content">
           <div class="day-item-label ${isDone ? 'done-strike' : ''}">${item.label}</div>
-          <div class="day-item-notes">${item.notes}</div>
+          ${item.notes ? `<div class="day-item-notes">${item.notes}</div>` : ''}
           ${cfNotes ? `<div class="day-item-cf-notes">"${escHtml(cfNotes)}"</div>` : ''}
           ${subInfo}
         </div>
         <div class="day-item-check ${isDone ? 'checked' : ''} ${item.type === 'workout' ? item.cat : ''}"></div>
       </div>`;
   });
+
+  html += `<button class="add-sched-item-btn" id="add-sched-item-btn">+ Add Workout</button>`;
 
   // Day notes
   const dayNotesList = state.dayNotes[dateStr] || [];
@@ -675,6 +703,35 @@ function renderDayViewInChallenge() {
   </div>`;
 
   grid.innerHTML = html;
+
+  document.getElementById('add-sched-item-btn').addEventListener('click', () => {
+    openAddItemModal(dateStr, () => { renderDayViewInChallenge(); renderTrackerTab(); renderWeekViewInChallenge(); document.getElementById('streak-count').textContent = getCurrentStreak(); });
+  });
+
+  grid.querySelectorAll('.day-item-remove').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const id = btn.dataset.id;
+      const isCustom = btn.dataset.custom === 'true';
+      const item = schedule.find(s => s.id === id);
+      const label = item?.label || id;
+      if (!confirm(`Remove "${label}" from this day?`)) return;
+      if (isCustom) {
+        state.dayAdditions[dateStr] = (state.dayAdditions[dateStr] || []).filter(i => i.id !== id);
+        if (state.workouts[dateStr]) delete state.workouts[dateStr][id];
+      } else {
+        if (!state.dayRemovals[dateStr]) state.dayRemovals[dateStr] = [];
+        if (!state.dayRemovals[dateStr].includes(id)) state.dayRemovals[dateStr].push(id);
+        if (state.workouts[dateStr]) delete state.workouts[dateStr][id];
+        if (state.dailyChecks[dateStr]) delete state.dailyChecks[dateStr][id];
+      }
+      persist();
+      renderDayViewInChallenge();
+      renderTrackerTab();
+      renderWeekViewInChallenge();
+      document.getElementById('streak-count').textContent = getCurrentStreak();
+    });
+  });
 
   document.getElementById('day-prev-btn').addEventListener('click', () => {
     state.challengeSelectedDate = addDays(dateStr, -1);
@@ -812,8 +869,7 @@ function renderWeekDaySchedule(dateStr) {
   const el = document.getElementById('week-day-schedule');
   el.classList.remove('hidden');
   const d = strToDate(dateStr);
-  const dow = d.getDay();
-  const schedule = DAY_SCHEDULES[dow] || [];
+  const schedule = effectiveDaySchedule(dateStr);
   const label = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }).toUpperCase();
   const today = todayStr();
   const isFuture = dateStr > today;
@@ -822,41 +878,42 @@ function renderWeekDaySchedule(dateStr) {
 
   if (!schedule.length) {
     html += `<div class="sched-rest">😌 Rest day — you've earned it!</div>`;
-    el.innerHTML = html;
-    return;
+  } else {
+    schedule.forEach(item => {
+      let isDone;
+      if (item.type === 'workout') {
+        isDone = isWorkoutComplete(dateStr, item.wid);
+      } else if (item.id === 'wake') {
+        isDone = !!(state.sleep[dateStr]?.waketime);
+      } else if (item.id === 'lights') {
+        isDone = !!(state.sleep[dateStr]?.bedtime);
+      } else {
+        isDone = !!(state.dailyChecks[dateStr]?.[item.id]);
+      }
+      const cfNotes = item.type === 'workout' && item.cat === 'cf'
+        ? (state.workouts[dateStr]?.[item.wid]?.notes || '')
+        : '';
+      const dotClass = item.type === 'workout' ? item.cat : 'routine';
+      const isCustom = !!(item.isCustom);
+
+      html += `
+        <div class="day-sched-item ${isDone ? 'done-item' : ''} ${isFuture ? 'future-sched-item' : ''}"
+             data-id="${item.id}" data-type="${item.type}" data-cat="${item.cat || ''}" data-wid="${item.wid || ''}" data-custom="${isCustom}">
+          <button class="day-item-remove" data-id="${item.id}" data-custom="${isCustom}" aria-label="Remove">×</button>
+          <div class="day-item-time">${item.time || '+'}</div>
+          <div class="day-item-dot ${dotClass}"></div>
+          <div class="day-item-content">
+            <div class="day-item-label ${isDone ? 'done-strike' : ''}">${item.label}</div>
+            ${item.notes ? `<div class="day-item-notes">${item.notes}</div>` : ''}
+            ${cfNotes ? `<div class="day-item-cf-notes">"${escHtml(cfNotes)}"</div>` : ''}
+          </div>
+          <div class="day-item-check ${isDone ? 'checked' : ''} ${item.type === 'workout' ? item.cat : ''}"></div>
+        </div>`;
+    });
+
+    html += `<button class="add-sched-item-btn" id="week-add-sched-item-btn">+ Add Workout</button>`;
   }
 
-  schedule.forEach(item => {
-    let isDone;
-    if (item.type === 'workout') {
-      isDone = isWorkoutComplete(dateStr, item.wid);
-    } else if (item.id === 'wake') {
-      isDone = !!(state.sleep[dateStr]?.waketime);
-    } else if (item.id === 'lights') {
-      isDone = !!(state.sleep[dateStr]?.bedtime);
-    } else {
-      isDone = !!(state.dailyChecks[dateStr]?.[item.id]);
-    }
-    const cfNotes = item.type === 'workout' && item.cat === 'cf'
-      ? (state.workouts[dateStr]?.[item.wid]?.notes || '')
-      : '';
-    const dotClass = item.type === 'workout' ? item.cat : 'routine';
-
-    html += `
-      <div class="day-sched-item ${isDone ? 'done-item' : ''} ${isFuture ? 'future-sched-item' : ''}"
-           data-id="${item.id}" data-type="${item.type}" data-cat="${item.cat || ''}" data-wid="${item.wid || ''}">
-        <div class="day-item-time">${item.time}</div>
-        <div class="day-item-dot ${dotClass}"></div>
-        <div class="day-item-content">
-          <div class="day-item-label ${isDone ? 'done-strike' : ''}">${item.label}</div>
-          <div class="day-item-notes">${item.notes}</div>
-          ${cfNotes ? `<div class="day-item-cf-notes">"${escHtml(cfNotes)}"</div>` : ''}
-        </div>
-        <div class="day-item-check ${isDone ? 'checked' : ''} ${item.type === 'workout' ? item.cat : ''}"></div>
-      </div>`;
-  });
-
-  // Show day notes at bottom of week panel
   const weekNotes = state.dayNotes[dateStr] || [];
   if (weekNotes.length) {
     html += `<div class="day-notes-wrap week-notes-wrap">
@@ -871,6 +928,39 @@ function renderWeekDaySchedule(dateStr) {
 
   el.innerHTML = html;
 
+  const refresh = () => {
+    renderWeekDaySchedule(dateStr);
+    renderWeekViewInChallenge();
+    if (dateStr === state.challengeSelectedDate) renderDayViewInChallenge();
+    renderTrackerTab();
+    document.getElementById('streak-count').textContent = getCurrentStreak();
+  };
+
+  el.querySelector('#week-add-sched-item-btn')?.addEventListener('click', () => {
+    openAddItemModal(dateStr, refresh);
+  });
+
+  el.querySelectorAll('.day-item-remove').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const id = btn.dataset.id;
+      const isCustom = btn.dataset.custom === 'true';
+      const item = schedule.find(s => s.id === id);
+      if (!confirm(`Remove "${item?.label || id}" from this day?`)) return;
+      if (isCustom) {
+        state.dayAdditions[dateStr] = (state.dayAdditions[dateStr] || []).filter(i => i.id !== id);
+        if (state.workouts[dateStr]) delete state.workouts[dateStr][id];
+      } else {
+        if (!state.dayRemovals[dateStr]) state.dayRemovals[dateStr] = [];
+        if (!state.dayRemovals[dateStr].includes(id)) state.dayRemovals[dateStr].push(id);
+        if (state.workouts[dateStr]) delete state.workouts[dateStr][id];
+        if (state.dailyChecks[dateStr]) delete state.dailyChecks[dateStr][id];
+      }
+      persist();
+      refresh();
+    });
+  });
+
   if (!isFuture) {
     el.querySelectorAll('.day-sched-item').forEach(itemEl => {
       itemEl.addEventListener('click', () => {
@@ -883,49 +973,22 @@ function renderWeekDaySchedule(dateStr) {
         if (type === 'workout') {
           if (isWorkoutComplete(dateStr, wid)) {
             unlogWorkout(dateStr, wid);
-            renderWeekDaySchedule(dateStr);
-            renderWeekViewInChallenge();
-            if (dateStr === todayStr()) renderDayViewInChallenge();
-            renderTrackerTab();
-            document.getElementById('streak-count').textContent = getCurrentStreak();
+            refresh();
           } else if (cat === 'cf') {
-            openCfModal(wid, schedItem.label, dateStr, () => {
-              renderWeekDaySchedule(dateStr);
-              renderWeekViewInChallenge();
-              if (dateStr === todayStr()) renderDayViewInChallenge();
-              renderTrackerTab();
-              document.getElementById('streak-count').textContent = getCurrentStreak();
-            });
+            openCfModal(wid, schedItem?.label || 'CrossFit', dateStr, refresh);
           } else {
             logWorkout(dateStr, wid);
-            renderWeekDaySchedule(dateStr);
-            renderWeekViewInChallenge();
-            if (dateStr === todayStr()) renderDayViewInChallenge();
-            renderTrackerTab();
-            document.getElementById('streak-count').textContent = getCurrentStreak();
+            refresh();
           }
         } else {
           if (id === 'wake') {
-            openWakeModal(dateStr, schedItem, () => {
-              renderWeekDaySchedule(dateStr);
-              renderWeekViewInChallenge();
-              if (dateStr === todayStr()) renderDayViewInChallenge();
-              renderTrackerTab();
-            });
+            openWakeModal(dateStr, schedItem, refresh);
           } else if (id === 'lights') {
-            openLightsModal(dateStr, schedItem, () => {
-              renderWeekDaySchedule(dateStr);
-              renderWeekViewInChallenge();
-              if (dateStr === todayStr()) renderDayViewInChallenge();
-              renderTrackerTab();
-            });
+            openLightsModal(dateStr, schedItem, refresh);
           } else {
             if (!state.dailyChecks[dateStr]) state.dailyChecks[dateStr] = {};
-            if (state.dailyChecks[dateStr][id]) {
-              delete state.dailyChecks[dateStr][id];
-            } else {
-              state.dailyChecks[dateStr][id] = true;
-            }
+            if (state.dailyChecks[dateStr][id]) delete state.dailyChecks[dateStr][id];
+            else state.dailyChecks[dateStr][id] = true;
             persist();
             renderWeekDaySchedule(dateStr);
           }
@@ -1441,6 +1504,30 @@ function closeLightsModal() {
 }
 
 // ════════════════════════════════════════
+// ADD ITEM MODAL
+// ════════════════════════════════════════
+
+let addItemPending = { date: null, cb: null };
+let addItemSelectedCat = 'other';
+
+function openAddItemModal(dateStr, cb) {
+  addItemPending = { date: dateStr, cb };
+  addItemSelectedCat = 'other';
+  document.getElementById('add-item-name-input').value = '';
+  document.querySelectorAll('.add-item-cat').forEach(b => {
+    b.classList.toggle('selected', b.dataset.cat === 'other');
+  });
+  document.getElementById('add-item-other-group').classList.remove('hidden');
+  document.getElementById('add-item-modal').classList.add('open');
+  setTimeout(() => document.getElementById('add-item-name-input').focus(), 300);
+}
+
+function closeAddItemModal() {
+  document.getElementById('add-item-modal').classList.remove('open');
+  addItemPending = { date: null, cb: null };
+}
+
+// ════════════════════════════════════════
 // FEEL MODAL (kept for backwards compat, not actively triggered)
 // ════════════════════════════════════════
 
@@ -1665,6 +1752,36 @@ function attachEvents() {
   });
   document.getElementById('lights-modal').addEventListener('click', e => {
     if (e.target === document.getElementById('lights-modal')) closeLightsModal();
+  });
+
+  // Add item modal — category picker
+  document.querySelectorAll('.add-item-cat').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.add-item-cat').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      addItemSelectedCat = btn.dataset.cat;
+      document.getElementById('add-item-other-group').classList.toggle('hidden', addItemSelectedCat !== 'other');
+    });
+  });
+
+  // Add item modal — confirm
+  document.getElementById('add-item-confirm-btn').addEventListener('click', () => {
+    if (!addItemPending.date) return;
+    const cat = addItemSelectedCat || 'other';
+    let label = cat === 'cf' ? 'CrossFit' : cat === 'yoga' ? 'Hot Yoga' : document.getElementById('add-item-name-input').value.trim();
+    if (cat === 'other' && !label) { document.getElementById('add-item-name-input').focus(); return; }
+    const id = `custom_${Date.now()}`;
+    const item = { id, wid: id, label, cat, type: 'workout', time: '', isCustom: true };
+    const dateStr = addItemPending.date;
+    if (!state.dayAdditions[dateStr]) state.dayAdditions[dateStr] = [];
+    state.dayAdditions[dateStr].push(item);
+    persist();
+    const cb = addItemPending.cb;
+    closeAddItemModal();
+    if (cb) cb();
+  });
+  document.getElementById('add-item-modal').addEventListener('click', e => {
+    if (e.target === document.getElementById('add-item-modal')) closeAddItemModal();
   });
 
   // Add book button

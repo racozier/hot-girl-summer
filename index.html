@@ -263,6 +263,24 @@
   <div style="flex:1" id="settings-close-area"></div>
 </div>
 
+<!-- ═══ ADD WORKOUT MODAL ═══ -->
+<div class="modal-overlay" id="add-item-modal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Add a Workout 💪</div>
+    <div class="add-item-cats">
+      <div class="add-item-cat" data-cat="cf">🏋️<span>CrossFit</span></div>
+      <div class="add-item-cat" data-cat="yoga">🧘<span>Hot Yoga</span></div>
+      <div class="add-item-cat selected" data-cat="other">👟<span>Other</span></div>
+    </div>
+    <div class="form-group" id="add-item-other-group">
+      <label class="form-label">What workout?</label>
+      <input type="text" id="add-item-name-input" class="form-input" placeholder="e.g. Running, Swimming, Cycling...">
+    </div>
+    <button class="modal-confirm-btn" id="add-item-confirm-btn">Add to Schedule</button>
+  </div>
+</div>
+
 <!-- ═══ CF NOTES MODAL ═══ -->
 <div class="modal-overlay" id="cf-modal">
   <div class="modal-sheet">
