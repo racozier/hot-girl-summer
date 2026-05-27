@@ -734,10 +734,8 @@ function renderDayViewInChallenge() {
     <div id="day-notes-list">${notesHtml}</div>
     <div class="day-note-form hidden" id="day-note-form">
       <textarea class="day-notes-input" id="day-note-input" placeholder="How's your day going? Any wins, thoughts, reflections..."></textarea>
-      <div style="display:flex;gap:8px;margin-top:8px">
-        <button class="save-day-note-btn" id="save-day-note-btn">Save</button>
-        <button class="skip-notes-btn" id="cancel-day-note-btn" style="flex:1;margin-top:0">Cancel</button>
-      </div>
+      <button class="modal-confirm-btn" id="save-day-note-btn" style="margin-top:10px">Save Note</button>
+      <button class="skip-notes-btn" id="cancel-day-note-btn">Cancel</button>
     </div>
   </div>`;
 
