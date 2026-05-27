@@ -1474,7 +1474,8 @@ function progressCircleStyle(dateStr) {
   const cf    = cfDone    ? GRID_CF_COLOR : GRID_DIM;
   const yoga  = yogaDone  ? '#a855f7' : (hasYoga  ? '#2a1535' : GRID_DIM);
   const other = otherDone ? '#22c55e' : (hasOther ? '#1a3a1a' : GRID_DIM);
-  return `conic-gradient(${cf} 0deg 120deg, ${yoga} 120deg 240deg, ${other} 240deg 360deg)`;
+  // Hot Yoga: top-right (0-120°), Other: bottom (120-240°), CF: top-left (240-360°)
+  return `conic-gradient(${yoga} 0deg 120deg, ${other} 120deg 240deg, ${cf} 240deg 360deg)`;
 }
 
 function renderProgressTab() {
