@@ -1532,7 +1532,7 @@ function renderChallengeGrid() {
       let cls = '';
       let styleAttr = '';
       if (gradient) {
-        styleAttr = `style="background:${gradient}"`;
+        styleAttr = `style="${gradient}"`;
       } else {
         const isFuture = d > today || (state.startDate && d < state.startDate);
         const sched = effectiveWorkoutsForDate(d);
