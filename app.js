@@ -1064,10 +1064,15 @@ function renderMonthView() {
     const dateStr = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const isToday = dateStr === today;
     const isSel = dateStr === state.challengeSelectedDate;
-    const gradStyle = progressCircleStyle(dateStr);
-    const bgStyle = gradStyle ? `background:${gradStyle}` : '';
+    const cls = challengeWeekCircleClass(dateStr);
+    const bg = cls === 'wk-complete' ? '#22c55e'
+             : cls === 'wk-today'   ? '#eab308'
+             : cls === 'wk-missed'  ? '#2a2a2a'
+             : cls === 'rest'       ? '#1a1a1a'
+             : '#222'; // future
+    const dim = cls === 'future' || cls === 'rest';
     html += `<div class="month-cell ${isToday ? 'month-today' : ''} ${isSel ? 'month-sel' : ''}" data-date="${dateStr}">
-      <div class="month-day-circle" style="${bgStyle}">
+      <div class="month-day-circle" style="background:${bg};${dim ? 'opacity:.3;' : ''}">
         <span class="month-day-num">${d}</span>
       </div>
     </div>`;
