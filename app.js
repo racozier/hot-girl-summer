@@ -718,8 +718,9 @@ function renderDayViewInChallenge() {
       </div>`;
   });
 
-  html += `<button class="add-sched-item-btn" id="add-sched-item-btn">+ Add Workout</button>`;
-  html += `<button class="add-sched-item-btn" id="add-sched-event-btn">+ Add Event</button>`;
+  html += `<button class="add-sched-item-btn" id="add-sched-item-btn">+ Add Workout 💪</button>`;
+  html += `<button class="add-sched-item-btn" id="add-sched-event-btn">+ Add Event 📅</button>`;
+  html += `<button class="add-sched-item-btn" id="add-day-note-btn">+ Add Note 📝</button>`;
 
   const dayNotesList = state.dayNotes[dateStr] || [];
   const notesHtml = dayNotesList.map((n, ni) => `
@@ -731,7 +732,6 @@ function renderDayViewInChallenge() {
 
   html += `<div class="day-notes-wrap">
     <div id="day-notes-list">${notesHtml}</div>
-    <button class="add-sched-item-btn" id="add-day-note-btn" style="margin-top:0">+ Add Note</button>
     <div class="day-note-form hidden" id="day-note-form">
       <textarea class="day-notes-input" id="day-note-input" placeholder="How's your day going? Any wins, thoughts, reflections..."></textarea>
       <div style="display:flex;gap:8px;margin-top:8px">
