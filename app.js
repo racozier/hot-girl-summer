@@ -593,32 +593,12 @@ function checkAndFireNotifications() {
   const now = new Date();
   const timeInMins = now.getHours() * 60 + now.getMinutes();
 
-  if (timeInMins >= 330 && timeInMins < 540) {
+  if (timeInMins >= 300 && timeInMins < 600) {
     const day = programDay(today);
     const quote = getDailyQuote(today).q;
-    const dayLabel = day >= 1 && day <= PROGRAM_DAYS ? `Day ${day} of ${PROGRAM_DAYS}` : 'Your Challenge';
-    fireNotification(`Good Morning Hot Girl! 🌅 ${dayLabel}`, quote, 'morning');
+    const dayLabel = day >= 1 && day <= PROGRAM_DAYS ? `Day #${day}` : 'Day #1';
+    fireNotification(`Good Morning!! ☀️ It's a HOT GIRL SUMMER! 🔥 ${dayLabel}!`, quote, 'morning');
     save(KEY.NOTIF_DATE, today);
-  }
-}
-
-function checkCheckinNotification() {
-  if (!state.notifEnabled) return;
-  if (Notification.permission !== 'granted') return;
-
-  const now = new Date();
-  const timeInMins = now.getHours() * 60 + now.getMinutes();
-  const today = todayStr();
-  const checkinKey = 'hgs_checkin_' + today;
-  if (load(checkinKey, false)) return;
-
-  if (timeInMins >= 450 && timeInMins < 600) {
-    const sched = scheduleForDate(today);
-    if (sched.length > 0) {
-      const names = sched.map(w => w.label).join(' & ');
-      fireNotification("Check-in Time! 💪", `Don't forget: ${names} today. You've got this!`, 'checkin');
-      save(checkinKey, true);
-    }
   }
 }
 
@@ -1868,7 +1848,6 @@ function launchApp() {
   switchTab('challenge');
 
   checkAndFireNotifications();
-  checkCheckinNotification();
 }
 
 // ════════════════════════════════════════
