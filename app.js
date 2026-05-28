@@ -893,6 +893,14 @@ function renderWeekViewInChallenge() {
       row.querySelectorAll('.week-cell').forEach(c => c.classList.remove('sel-day'));
       cell.classList.add('sel-day');
       renderWeekDaySchedule(cell.dataset.date);
+      // Update header quote and counter to match the tapped day
+      const vDay = programDay(cell.dataset.date);
+      const vWeek = programWeek(cell.dataset.date);
+      const dq = getDailyQuote(cell.dataset.date);
+      document.getElementById('daily-quote').innerHTML =
+        `"${escHtml(dq.q)}"${dq.a ? `<span class="daily-quote-author">— ${escHtml(dq.a)}</span>` : ''}`;
+      document.getElementById('day-counter').innerHTML = `${Math.max(1, Math.min(vDay, PROGRAM_DAYS))} <span>/ ${PROGRAM_DAYS}</span>`;
+      document.getElementById('day-label').textContent = `Week ${vWeek} of ${WEEKS}`;
     });
   });
 
