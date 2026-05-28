@@ -637,6 +637,15 @@ function renderDayViewInChallenge() {
   const d = strToDate(dateStr);
   const schedule = effectiveDaySchedule(dateStr);
 
+  // Update header quote and day counter for the viewed date
+  const viewDay = programDay(dateStr);
+  const viewWeek = programWeek(dateStr);
+  const dq = getDailyQuote(dateStr);
+  document.getElementById('daily-quote').innerHTML =
+    `"${escHtml(dq.q)}"${dq.a ? `<span class="daily-quote-author">— ${escHtml(dq.a)}</span>` : ''}`;
+  document.getElementById('day-counter').innerHTML = `${Math.max(1, Math.min(viewDay, PROGRAM_DAYS))} <span>/ ${PROGRAM_DAYS}</span>`;
+  document.getElementById('day-label').textContent = `Week ${viewWeek} of ${WEEKS}`;
+
   const dayName = d.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
   const dateFmt = d.toLocaleDateString('en-US', { month: 'long', day: 'numeric' }).toUpperCase();
   const isToday = dateStr === today;
