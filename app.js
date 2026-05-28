@@ -2101,6 +2101,48 @@ function attachEvents() {
   // Settings close
   document.getElementById('settings-close-area').addEventListener('click', closeSettings);
 
+  // Export data
+  document.getElementById('export-btn').addEventListener('click', () => {
+    const backup = {};
+    Object.values(KEY).forEach(k => {
+      const v = localStorage.getItem(k);
+      if (v !== null) backup[k] = JSON.parse(v);
+    });
+    backup._exported = new Date().toISOString();
+    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `hgs-backup-${todayStr()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  // Import data
+  document.getElementById('import-btn').addEventListener('click', () => {
+    document.getElementById('import-file-input').click();
+  });
+  document.getElementById('import-file-input').addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const backup = JSON.parse(ev.target.result);
+        if (!confirm('Restore from this backup? Your current data will be replaced.')) return;
+        Object.values(KEY).forEach(k => localStorage.removeItem(k));
+        Object.entries(backup).forEach(([k, v]) => {
+          if (k !== '_exported') localStorage.setItem(k, JSON.stringify(v));
+        });
+        location.reload();
+      } catch {
+        alert('Invalid backup file.');
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  });
+
   // Sunday reflection save
   document.getElementById('save-reflection-btn').addEventListener('click', () => {
     const text = document.getElementById('reflection-text').value.trim();
