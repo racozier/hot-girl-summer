@@ -698,7 +698,7 @@ function renderDayViewInChallenge() {
       subInfo = `<div class="day-item-sub-info">${sl.waketime ? `🕐 ${sl.waketime}` : ''}${hoursStr}${sl.quality ? ` · ${sl.quality}` : ''}</div>`;
     } else if (item.id === 'lights' && isDone) {
       const sl = state.sleep[dateStr];
-      subInfo = `<div class="day-item-sub-info">${sl.bedtime ? `🌙 ${sl.bedtime}` : ''}${sl.favPart ? `<div class="day-item-favpart">"${escHtml(sl.favPart)}"</div>` : ''}</div>`;
+      subInfo = `<div class="day-item-sub-info">${sl.bedtime ? `🌙 ${sl.bedtime}` : ''}</div>`;
     }
 
     const isCustom = !!(item.isCustom);
@@ -956,20 +956,27 @@ function renderWeekDaySchedule(dateStr) {
         </div>`;
     });
 
-    html += `<button class="add-sched-item-btn" id="week-add-sched-item-btn">+ Add Workout</button>`;
+    html += `<button class="add-sched-item-btn" id="week-add-sched-item-btn">+ Add Workout 💪</button>`;
+    html += `<button class="add-sched-item-btn" id="week-add-event-btn">+ Add Event 📅</button>`;
+    html += `<button class="add-sched-item-btn" id="week-add-note-btn">+ Add Note 📝</button>`;
   }
 
   const weekNotes = state.dayNotes[dateStr] || [];
-  if (weekNotes.length) {
-    html += `<div class="day-notes-wrap week-notes-wrap">
-      <div class="day-notes-label">Notes</div>
-      ${weekNotes.map(n => `
-        <div class="day-note-item">
-          <div class="day-note-text">${escHtml(n.text)}</div>
-          <div class="day-note-meta">${new Date(n.timestamp).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true})}</div>
-        </div>`).join('')}
-    </div>`;
-  }
+  const weekNotesHtml = weekNotes.map((n, ni) => `
+    <div class="day-note-item">
+      <div class="day-note-text">${escHtml(n.text)}</div>
+      <div class="day-note-meta">${new Date(n.timestamp).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true})}</div>
+      <button class="delete-day-note-btn" data-ni="${ni}">✕</button>
+    </div>`).join('');
+
+  html += `<div class="day-notes-wrap">
+    <div id="week-notes-list">${weekNotesHtml}</div>
+    <div class="day-note-form hidden" id="week-note-form">
+      <textarea class="day-notes-input" id="week-note-input" placeholder="How's your day going? Any wins, thoughts, reflections..."></textarea>
+      <button class="modal-confirm-btn" id="week-save-note-btn" style="margin-top:10px">Save Note</button>
+      <button class="skip-notes-btn" id="week-cancel-note-btn">Cancel</button>
+    </div>
+  </div>`;
 
   el.innerHTML = html;
 
@@ -983,6 +990,33 @@ function renderWeekDaySchedule(dateStr) {
 
   el.querySelector('#week-add-sched-item-btn')?.addEventListener('click', () => {
     openAddItemModal(dateStr, refresh);
+  });
+  el.querySelector('#week-add-event-btn')?.addEventListener('click', () => {
+    openAddEventModal(dateStr, refresh);
+  });
+  el.querySelector('#week-add-note-btn')?.addEventListener('click', () => {
+    const form = el.querySelector('#week-note-form');
+    form.classList.toggle('hidden');
+    if (!form.classList.contains('hidden')) el.querySelector('#week-note-input').focus();
+  });
+  el.querySelector('#week-cancel-note-btn')?.addEventListener('click', () => {
+    el.querySelector('#week-note-form').classList.add('hidden');
+  });
+  el.querySelector('#week-save-note-btn')?.addEventListener('click', () => {
+    const input = el.querySelector('#week-note-input');
+    const text = input.value.trim();
+    if (!text) return;
+    if (!state.dayNotes[dateStr]) state.dayNotes[dateStr] = [];
+    state.dayNotes[dateStr].push({ text, timestamp: new Date().toISOString() });
+    persist();
+    renderWeekDaySchedule(dateStr);
+  });
+  el.querySelectorAll('.delete-day-note-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.dayNotes[dateStr].splice(Number(btn.dataset.ni), 1);
+      persist();
+      renderWeekDaySchedule(dateStr);
+    });
   });
 
   el.querySelectorAll('.day-item-remove').forEach(btn => {
@@ -1642,7 +1676,6 @@ function openLightsModal(dateStr, schedItem, cb) {
   lightsPending = { date: dateStr, item: schedItem, cb };
   const existing = state.sleep[dateStr];
   document.getElementById('lights-time-input').value = existing?.bedtime || '';
-  document.getElementById('lights-favpart-input').value = existing?.favPart || '';
   document.getElementById('lights-modal').classList.add('open');
 }
 
@@ -1910,11 +1943,9 @@ function attachEvents() {
   document.getElementById('lights-confirm-btn').addEventListener('click', () => {
     if (!lightsPending.date) return;
     const bedtime = document.getElementById('lights-time-input').value;
-    const favPart = document.getElementById('lights-favpart-input').value.trim();
     const dateStr = lightsPending.date;
     if (!state.sleep[dateStr]) state.sleep[dateStr] = {};
     state.sleep[dateStr].bedtime = bedtime;
-    if (favPart) state.sleep[dateStr].favPart = favPart;
     // No hours here — tomorrow's wake up will close the loop
     persist();
     const cb = lightsPending.cb;
